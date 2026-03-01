@@ -331,6 +331,122 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 24px;max-wid
 .toast{position:fixed;bottom:22px;right:22px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:13px 20px;border-radius:10px;font-weight:700;font-size:.85rem;z-index:9999;transform:translateY(100px);opacity:0;transition:.4s;box-shadow:0 8px 24px rgba(16,185,129,.3)}
 .toast.show{transform:translateY(0);opacity:1}
 
+/* VIDEO CARDS */
+.cc-thumb{position:absolute;inset:0;background-size:cover;background-position:center top;transition:opacity .4s;z-index:1}
+.cc-iframe{position:absolute;inset:0;width:100%;height:177.78%;top:-38.89%;border:none;pointer-events:none;opacity:0;transition:opacity .4s;z-index:2}
+.clip-card.playing .cc-iframe{opacity:1}
+.clip-card.playing .cc-thumb{opacity:0}
+.clip-card.playing .cc-play{opacity:0!important}
+/* VIDEO MODAL */
+.vid-modal{position:fixed;inset:0;background:rgba(0,0,0,.96);backdrop-filter:blur(24px);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+.vid-modal.show{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.vid-modal-wrap{width:min(380px,85vw);aspect-ratio:9/16;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 0 100px rgba(124,58,237,.5)}
+.vid-modal-close{position:absolute;top:-50px;right:0;color:#fff;font-size:2rem;cursor:pointer;background:none;border:none;line-height:1;opacity:.7;transition:.2s}
+.vid-modal-close:hover{opacity:1}
+.vid-modal-iframe{width:100%;height:100%;border:none}
+/* ── CREATOR UNIVERSE ── */
+.creator-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:32px}
+.cr-card{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:22px;transition:all .3s;cursor:pointer;position:relative;overflow:hidden}
+.cr-card::before{content:'';position:absolute;inset:0;opacity:0;transition:.3s;pointer-events:none}
+.cr-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.cr-card:hover::before{opacity:1}
+.cr-top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.cr-ava{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;color:#fff;flex-shrink:0;position:relative}
+.cr-ava .live-ring{position:absolute;inset:-3px;border-radius:19px;border:2px solid;animation:ringPulse 2s infinite}
+@keyframes ringPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cr-info h3{font-size:1rem;font-weight:800;margin-bottom:3px}
+.cr-handle{font-size:.75rem;color:var(--m);margin-bottom:5px}
+.cr-platforms{display:flex;gap:5px;flex-wrap:wrap}
+.cr-plat-tag{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:50px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+.cr-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.cr-stat-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;text-align:center}
+.cr-stat-n{font-size:1.1rem;font-weight:900;line-height:1}
+.cr-stat-l{font-size:.65rem;color:var(--m);margin-top:3px}
+.cr-viral-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cr-viral-label{font-size:.72rem;color:var(--m)}
+.cr-viral-bar{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:50px;margin:0 10px;overflow:hidden}
+.cr-viral-fill{height:100%;border-radius:50px;transition:width 1.2s ease}
+.cr-viral-score{font-size:.78rem;font-weight:900}
+.cr-clips-badge{display:flex;align-items:center;justify-content:space-between;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.18);border-radius:10px;padding:9px 14px}
+.cr-clips-label{font-size:.72rem;color:var(--m)}
+.cr-clips-num{font-size:.88rem;font-weight:800;color:#c084fc}
+.cr-btn{width:100%;margin-top:12px;padding:10px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;border:none;transition:all .25s;color:#fff}
+.cr-btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.cr-trending{position:absolute;top:14px;right:14px;font-size:.62rem;font-weight:700;padding:3px 9px;border-radius:50px;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.cr-new{background:rgba(16,185,129,.12);color:#10b981;border-color:rgba(16,185,129,.25)}
+
+/* VIEWS BANNER */
+.views-banner{background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(59,130,246,.06));border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:28px;margin:24px 0}
+.vb-inner{display:flex;gap:0;flex-wrap:wrap}
+.vb-item{flex:1;min-width:140px;text-align:center;padding:12px 16px}
+.vb-n{font-size:2rem;font-weight:900;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.vb-l{font-size:.72rem;color:var(--m);margin-top:5px;line-height:1.4}
+.vb-div{width:1px;background:rgba(255,255,255,.07);align-self:stretch;margin:8px 0}
+
+/* PLATFORM BREAKDOWN */
+.plat-breakdown{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:24px;margin:16px 0}
+.pb-title{font-size:.78rem;font-weight:700;color:var(--m);letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px}
+.pb-bars{display:flex;flex-direction:column;gap:12px}
+.pb-row{display:flex;align-items:center;gap:12px}
+.pb-plat{font-size:.78rem;font-weight:700;width:100px;flex-shrink:0;display:flex;align-items:center;gap:7px}
+.pb-track{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:50px;overflow:hidden}
+.pb-fill{height:100%;border-radius:50px;transition:width 1.5s ease}
+.pb-val{font-size:.75rem;font-weight:700;width:60px;text-align:right;flex-shrink:0}
+
+/* OPPORTUNITY TABLE */
+.opp-table{background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-top:16px}
+.ot-head{display:grid;grid-template-columns:1.6fr 1.2fr 1.2fr 1fr 1fr .8fr;padding:12px 18px;background:rgba(255,255,255,.03);font-size:.7rem;font-weight:700;color:var(--m);letter-spacing:.06em;text-transform:uppercase;gap:8px}
+.ot-row{display:grid;grid-template-columns:1.6fr 1.2fr 1.2fr 1fr 1fr .8fr;padding:13px 18px;border-top:1px solid rgba(255,255,255,.04);font-size:.8rem;gap:8px;align-items:center;transition:.2s}
+.ot-row:hover{background:rgba(255,255,255,.02)}
+.ot-creator{display:flex;align-items:center;gap:9px}
+.ot-av{width:28px;height:28px;border-radius:8px;font-size:.62rem;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ot-name{font-weight:700;font-size:.82rem}
+.ot-subs{font-size:.68rem;color:var(--m)}
+.ot-score-bar{display:flex;align-items:center;gap:6px}
+.ot-bar-t{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:50px;overflow:hidden}
+.ot-bar-f{height:100%;border-radius:50px}
+.ot-score-n{font-size:.72rem;font-weight:800;width:26px;flex-shrink:0}
+.ot-clip-btn{padding:5px 12px;border-radius:6px;font-weight:700;font-size:.7rem;cursor:pointer;border:none;color:#fff;white-space:nowrap;transition:.2s}
+.ot-clip-btn:hover{transform:translateY(-1px);filter:brightness(1.15)}
+.plat-pill{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:50px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+@media(max-width:900px){.ot-head,.ot-row{grid-template-columns:1.4fr 1fr 1fr .8fr;}.ot-head div:nth-child(4),.ot-row div:nth-child(4),.ot-head div:nth-child(5),.ot-row div:nth-child(5){display:none}}
+@media(max-width:640px){.creator-grid{grid-template-columns:1fr 1fr}.cr-card{padding:16px}.vb-inner{flex-direction:column}.ot-head,.ot-row{grid-template-columns:1.4fr 1fr .8fr}.ot-head div:nth-child(3),.ot-row div:nth-child(3){display:none}}
+.cw-wrap{position:relative;height:680px;overflow:hidden;border-radius:16px;margin-bottom:32px}
+.cw-ft,.cw-fb{position:absolute;left:0;right:0;height:130px;z-index:6;pointer-events:none}
+.cw-ft{top:0;background:linear-gradient(to bottom,var(--dark),transparent)}
+.cw-fb{bottom:0;background:linear-gradient(to top,var(--dark),transparent)}
+.cw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cw-col{display:flex;flex-direction:column;gap:10px}
+.cw-col.s1{animation:cws 24s linear infinite}
+.cw-col.s2{animation:cws 31s linear infinite;margin-top:-120px}
+.cw-col.s3{animation:cws 27s linear infinite;margin-top:-55px}
+@keyframes cws{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+.cw-card{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:9/16;cursor:pointer;border:1px solid rgba(255,255,255,.07);transition:transform .3s,border-color .3s,box-shadow .3s;flex-shrink:0;z-index:1}
+.cw-card:hover{transform:scale(1.05);border-color:rgba(124,58,237,.55);box-shadow:0 16px 50px rgba(124,58,237,.35);z-index:10}
+.cw-thumb{position:absolute;inset:0;background-size:cover;background-position:center top;background-color:#111;transition:opacity .4s}
+.cw-vid{position:absolute;inset:0;width:100%;height:178%;top:-39%;border:none;opacity:0;transition:opacity .5s;pointer-events:none}
+.cw-card.pw .cw-vid{opacity:1}.cw-card.pw .cw-thumb{opacity:0}.cw-card.pw .cwp{opacity:0!important}
+.cw-ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.22) 0%,transparent 28%,transparent 42%,rgba(0,0,0,.98) 100%)}
+.cw-hd{position:absolute;top:8px;left:8px;right:38px;z-index:4}
+.cw-chip{display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:2px 7px;font-size:.52rem;font-weight:700;color:#fff;margin-bottom:3px}
+.cw-chip-d{width:4px;height:4px;background:#10b981;border-radius:50%;animation:blink 1.5s infinite;flex-shrink:0}
+.cw-ht{font-size:.58rem;font-weight:900;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.9);line-height:1.3}
+.cw-sc{position:absolute;top:8px;right:7px;z-index:4;font-size:.62rem;font-weight:900;padding:2px 8px;border-radius:50px}
+.cw-wm{position:absolute;bottom:52px;right:7px;z-index:4;display:flex;align-items:center;gap:3px;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 7px}
+.cw-wm-t{font-size:.52rem;font-weight:900;background:linear-gradient(135deg,#c084fc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.03em}
+.cw-caps{position:absolute;bottom:34px;left:6px;right:6px;z-index:4;text-align:center;line-height:1.7}
+.cap{display:inline;font-size:.58rem;font-weight:900;color:#fff;background:rgba(0,0,0,.82);padding:1px 3px;border-radius:2px;text-transform:uppercase;letter-spacing:.02em}
+.cap.hl{background:#f59e0b;color:#000}
+.cw-bot{position:absolute;bottom:0;left:0;right:0;padding:7px 9px 9px;z-index:4}
+.cw-cr{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.cw-av2{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.45);font-size:.48rem;font-weight:900;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.cw-cn{font-size:.6rem;font-weight:700;color:rgba(255,255,255,.9)}
+.cw-ttl{font-size:.68rem;font-weight:800;color:#fff;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.cw-sts{display:flex;gap:7px;margin-top:3px}
+.cw-st{font-size:.54rem;color:rgba(255,255,255,.6)}
+.cwp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:.8rem;opacity:0;transition:.3s;z-index:5}
+.cw-card:hover .cwp{opacity:1}
 @media(max-width:900px){.calc-grid{grid-template-columns:1fr}.ft-top{grid-template-columns:1fr 1fr}.comp-head,.comp-row{grid-template-columns:1.5fr repeat(4,.8fr);font-size:.72rem}}
 @media(max-width:640px){nav{padding:0 18px}.nav-links{display:none}.hero-btns{flex-direction:column;align-items:stretch;width:100%;max-width:360px}.ft-top{grid-template-columns:1fr}.clip-grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}.aff-stats{grid-template-columns:1fr}.comp-head,.comp-row{grid-template-columns:1.5fr repeat(2,.8fr)}.comp-head div:nth-child(4),.comp-head div:nth-child(5),.comp-row div:nth-child(4),.comp-row div:nth-child(5){display:none}}
 </style>
@@ -440,6 +556,68 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 24px;max-wid
     <div class="ps-box"><div class="ps-n">$0</div><div class="ps-l">To Start Today</div></div>
   </div>
 </div>
+
+<!-- CREATOR UNIVERSE -->
+<section class="sec" id="creators" style="padding-bottom:0">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:48px">
+      <div class="sec-badge">🌍 Creator Universe</div>
+      <div class="sec-h">Billions of Views.<br/><span class="grad">Infinite Clips Waiting for You.</span></div>
+      <p class="sec-p" style="margin:0 auto 20px">Every creator below uploads constantly. ClipSpeedAI scans every second of every video and turns it into viral short-form gold — automatically. Pick your creator. Start clipping. Start earning.</p>
+      <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);border-radius:50px;padding:7px 20px;font-size:.82rem;color:#10b981;font-weight:600">
+        <span style="width:8px;height:8px;background:#10b981;border-radius:50%;box-shadow:0 0 8px #10b981;animation:blink 1s infinite;flex-shrink:0;display:inline-block"></span>
+        <span id="liveClipOpp">4,820,000+</span> clips waiting to be made right now across all creators
+      </div>
+    </div>
+
+    <!-- CREATOR CARDS GRID -->
+    <div class="creator-grid" id="creatorGrid"></div>
+
+    <!-- TOTAL VIEWS COUNTER BANNER -->
+    <div class="views-banner">
+      <div class="vb-inner">
+        <div class="vb-item">
+          <div class="vb-n" id="totalViewsCount">847B+</div>
+          <div class="vb-l">Total Views Across All Creators</div>
+        </div>
+        <div class="vb-div"></div>
+        <div class="vb-item">
+          <div class="vb-n">50,000+</div>
+          <div class="vb-l">Hours of Clippable Content</div>
+        </div>
+        <div class="vb-div"></div>
+        <div class="vb-item">
+          <div class="vb-n" id="newVidsToday">14</div>
+          <div class="vb-l">New Videos Posted Today</div>
+        </div>
+        <div class="vb-div"></div>
+        <div class="vb-item">
+          <div class="vb-n">∞</div>
+          <div class="vb-l">Clips You Can Make</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLATFORM VIEW BREAKDOWN -->
+    <div class="plat-breakdown">
+      <div class="pb-title">📊 Total Creator Views by Platform</div>
+      <div class="pb-bars" id="pbBars"></div>
+    </div>
+
+    <!-- VIRAL OPPORTUNITY TABLE -->
+    <div class="opp-table">
+      <div class="ot-head">
+        <div>Creator</div>
+        <div>Content Library</div>
+        <div>Clips Available</div>
+        <div>Avg Viral Score</div>
+        <div>Best Platform</div>
+        <div></div>
+      </div>
+      <div id="oppRows"></div>
+    </div>
+  </div>
+</section>
 
 <!-- CLIP SHOWCASE -->
 <section class="sec" id="clips">
@@ -921,6 +1099,341 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 // ── LIVE COUNTER ──
 let lc=9847;
 setInterval(()=>{if(Math.random()>.55){lc+=Math.floor(Math.random()*3)+1;const el=document.getElementById('liveJoin');if(el)el.textContent=lc.toLocaleString()}},2500);
+
+// ── CREATOR UNIVERSE DATA ──────────────────────────────────────────────────
+const CREATORS=[
+  {name:'MrBeast',handle:'@MrBeast',init:'MB',
+   color:'linear-gradient(135deg,#3b82f6,#7c3aed)',border:'#3b82f6',
+   glow:'rgba(59,130,246,.25)',
+   subs:'340M',totalViews:'80B+',ytViews:'60B',ttViews:'12B',igViews:'5B',xViews:'3B',
+   videos:'800+',clipsAvail:'120,000+',
+   viralScore:97,bestPlat:'YouTube',bestPlatIcon:'▶',
+   platforms:['YouTube','TikTok','Instagram','X'],
+   trending:true,isNew:false,
+   desc:'Most subscribed individual YouTube creator. Every video is a guaranteed viral clip machine.'},
+  {name:'IShowSpeed',handle:'@IShowSpeed',init:'IS',
+   color:'linear-gradient(135deg,#ef4444,#f97316)',border:'#ef4444',
+   glow:'rgba(239,68,68,.25)',
+   subs:'30M',totalViews:'18B+',ytViews:'12B',ttViews:'4B',igViews:'1.5B',xViews:'500M',
+   videos:'2,000+',clipsAvail:'180,000+',
+   viralScore:99,bestPlat:'YouTube',bestPlatIcon:'▶',
+   platforms:['YouTube','TikTok','Instagram','Kick'],
+   trending:true,isNew:false,
+   desc:'The most clipped livestreamer on the planet. Reaction moments = instant viral gold.'},
+  {name:'Kai Cenat',handle:'@KaiCenat',init:'KC',
+   color:'linear-gradient(135deg,#10b981,#3b82f6)',border:'#10b981',
+   glow:'rgba(16,185,129,.25)',
+   subs:'15M',totalViews:'12B+',ytViews:'6B',ttViews:'3B',igViews:'2B',xViews:'1B',
+   videos:'3,000+',clipsAvail:'200,000+',
+   viralScore:98,bestPlat:'Twitch',bestPlatIcon:'■',
+   platforms:['YouTube','TikTok','Twitch','Instagram'],
+   trending:true,isNew:false,
+   desc:'Twitch world record holder. Subathon clips alone generated millions in organic reach.'},
+  {name:'Adin Ross',handle:'@AdinRoss',init:'AR',
+   color:'linear-gradient(135deg,#f59e0b,#ef4444)',border:'#f59e0b',
+   glow:'rgba(245,158,11,.25)',
+   subs:'8M',totalViews:'5B+',ytViews:'2B',ttViews:'1.5B',igViews:'800M',xViews:'700M',
+   videos:'1,500+',clipsAvail:'90,000+',
+   viralScore:93,bestPlat:'Kick',bestPlatIcon:'■',
+   platforms:['YouTube','Kick','TikTok','Instagram'],
+   trending:false,isNew:false,
+   desc:'King of reaction content. Explosive moments every single stream — all clippable.'},
+  {name:'Neon',handle:'@Neon',init:'NE',
+   color:'linear-gradient(135deg,#a855f7,#ec4899)',border:'#a855f7',
+   glow:'rgba(168,85,247,.25)',
+   subs:'5M',totalViews:'2.5B+',ytViews:'1.2B',ttViews:'800M',igViews:'400M',xViews:'100M',
+   videos:'600+',clipsAvail:'40,000+',
+   viralScore:90,bestPlat:'TikTok',bestPlatIcon:'♪',
+   platforms:['YouTube','TikTok','Kick','Instagram'],
+   trending:false,isNew:true,
+   desc:'Rising star. Young audience = insane TikTok algorithm performance on every clip.'},
+  {name:'Marlon',handle:'@Marlon',init:'MA',
+   color:'linear-gradient(135deg,#ec4899,#f97316)',border:'#ec4899',
+   glow:'rgba(236,72,153,.25)',
+   subs:'4M',totalViews:'1.8B+',ytViews:'900M',ttViews:'600M',igViews:'200M',xViews:'100M',
+   videos:'500+',clipsAvail:'35,000+',
+   viralScore:88,bestPlat:'YouTube',bestPlatIcon:'▶',
+   platforms:['YouTube','TikTok','Instagram'],
+   trending:false,isNew:true,
+   desc:'Comedy and reaction gold. Every video has 3–5 clips that perform above average.'},
+  {name:'Clix',handle:'@Clix',init:'CX',
+   color:'linear-gradient(135deg,#6366f1,#a855f7)',border:'#6366f1',
+   glow:'rgba(99,102,241,.25)',
+   subs:'6M',totalViews:'3B+',ytViews:'1.5B',ttViews:'1B',igViews:'400M',xViews:'100M',
+   videos:'900+',clipsAvail:'60,000+',
+   viralScore:92,bestPlat:'TikTok',bestPlatIcon:'♪',
+   platforms:['YouTube','Twitch','TikTok','Instagram'],
+   trending:false,isNew:false,
+   desc:'Fortnite\'s biggest name. Gaming clips dominate TikTok and YouTube Shorts every week.'},
+  {name:'+ 10,000 more',handle:'Any public creator',init:'+',
+   color:'linear-gradient(135deg,#374151,#6b7280)',border:'#4b5563',
+   glow:'rgba(107,114,128,.15)',
+   subs:'∞',totalViews:'∞',ytViews:'∞',ttViews:'∞',igViews:'∞',xViews:'∞',
+   videos:'∞',clipsAvail:'∞',
+   viralScore:0,bestPlat:'All',bestPlatIcon:'⚡',
+   platforms:['YouTube','TikTok','Kick','Instagram','X'],
+   trending:false,isNew:false,
+   desc:'Paste ANY public YouTube, Twitch or Kick URL. ClipSpeedAI clips it all — any creator, any niche, any language.'},
+];
+
+const platColors={'YouTube':'#ff0000','TikTok':'#000','Instagram':'linear-gradient(135deg,#f09433,#dc2743)','Twitch':'#9146ff','Kick':'#53fc18','X':'#000','All':'linear-gradient(135deg,#7c3aed,#3b82f6)'};
+
+function buildCreatorGrid(){
+  const grid=document.getElementById('creatorGrid');
+  if(!grid)return;
+  grid.innerHTML=CREATORS.map(c=>{
+    const isPlus=c.name.includes('+');
+    const scoreBar=!isPlus?`<div class="cr-viral-row"><span class="cr-viral-label">Viral Score</span><div class="cr-viral-bar"><div class="cr-viral-fill" style="width:${c.viralScore}%;background:${c.viralScore>=95?'linear-gradient(90deg,#ef4444,#ec4899)':c.viralScore>=90?'linear-gradient(90deg,#f59e0b,#ef4444)':'linear-gradient(90deg,#10b981,#3b82f6)'}"></div></div><span class="cr-viral-score" style="color:${c.viralScore>=95?'#ec4899':c.viralScore>=90?'#f59e0b':'#10b981'}">${c.viralScore}</span></div>`:'';
+    return `<div class="cr-card" style="--hover-border:${c.border};box-shadow:inset 0 0 0 0 ${c.glow}" onmouseenter="this.style.borderColor='${c.border}';this.style.boxShadow='0 20px 60px ${c.glow}'" onmouseleave="this.style.borderColor='rgba(255,255,255,.07)';this.style.boxShadow='none'" onclick="${isPlus?`goTo('#pricing')`:`showToast('🎬 Clipping ${c.name} — start your free trial!')`}">
+      ${c.trending?'<div class="cr-trending">🔥 TRENDING</div>':''}
+      ${c.isNew?'<div class="cr-trending cr-new">✨ NEW</div>':''}
+      <div class="cr-top">
+        <div class="cr-ava" style="background:${c.color}">
+          ${isPlus?'<span style="font-size:1.8rem">⚡</span>':c.init}
+          ${c.trending?`<div class="live-ring" style="border-color:${c.border}"></div>`:''}
+        </div>
+        <div class="cr-info">
+          <h3>${c.name}</h3>
+          <div class="cr-handle">${c.handle}</div>
+          <div class="cr-platforms">${c.platforms.map(p=>`<span class="cr-plat-tag">${p}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="cr-stats">
+        <div class="cr-stat-box"><div class="cr-stat-n" style="background:${c.color};-webkit-background-clip:text;-webkit-text-fill-color:transparent">${c.subs}</div><div class="cr-stat-l">Subscribers</div></div>
+        <div class="cr-stat-box"><div class="cr-stat-n" style="background:${c.color};-webkit-background-clip:text;-webkit-text-fill-color:transparent">${c.totalViews}</div><div class="cr-stat-l">Total Views</div></div>
+      </div>
+      ${scoreBar}
+      <div class="cr-clips-badge"><span class="cr-clips-label">📦 Clips available</span><span class="cr-clips-num">${c.clipsAvail}</span></div>
+      <p style="font-size:.75rem;color:var(--m);line-height:1.55;margin:10px 0">${c.desc}</p>
+      <button class="cr-btn" style="background:${c.color}">${isPlus?'🚀 Clip Any Creator →':`🎬 Start Clipping ${c.name.split(' ')[0]} →`}</button>
+    </div>`;
+  }).join('');
+}
+
+function buildPlatBars(){
+  const bars=document.getElementById('pbBars');
+  if(!bars)return;
+  const plats=[
+    {name:'YouTube',icon:'▶',color:'#ff0000',val:'142B+',pct:100},
+    {name:'TikTok',icon:'♪',color:'#69C9D0',val:'38B+',pct:27},
+    {name:'Instagram',icon:'◈',color:'#e1306c',val:'12B+',pct:9},
+    {name:'Kick',icon:'■',color:'#53fc18',val:'8B+',pct:6},
+    {name:'Twitter/X',icon:'✕',color:'#1da1f2',val:'5B+',pct:4},
+  ];
+  bars.innerHTML=plats.map(p=>`<div class="pb-row">
+    <div class="pb-plat"><span style="width:20px;height:20px;border-radius:5px;background:${p.color};display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;flex-shrink:0">${p.icon}</span>${p.name}</div>
+    <div class="pb-track"><div class="pb-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
+    <div class="pb-val" style="color:${p.color}">${p.val}</div>
+  </div>`).join('');
+}
+
+function buildOppTable(){
+  const rows=document.getElementById('oppRows');
+  if(!rows)return;
+  rows.innerHTML=CREATORS.filter(c=>!c.name.includes('+')).map(c=>`
+    <div class="ot-row">
+      <div class="ot-creator"><div class="ot-av" style="background:${c.color}">${c.init}</div><div><div class="ot-name">${c.name}</div><div class="ot-subs">${c.subs} subs</div></div></div>
+      <div style="font-size:.78rem;font-weight:600">${c.videos} <span style="color:var(--m);font-weight:400">videos</span></div>
+      <div style="color:#c084fc;font-weight:700;font-size:.78rem">${c.clipsAvail}</div>
+      <div class="ot-score-bar"><div class="ot-bar-t"><div class="ot-bar-f" style="width:${c.viralScore}%;background:${c.viralScore>=95?'linear-gradient(90deg,#ef4444,#ec4899)':c.viralScore>=90?'linear-gradient(90deg,#f59e0b,#ef4444)':'linear-gradient(90deg,#10b981,#3b82f6)'}"></div></div><span class="ot-score-n" style="color:${c.viralScore>=95?'#ec4899':c.viralScore>=90?'#f59e0b':'#10b981'}">${c.viralScore}</span></div>
+      <div><span class="plat-pill">${c.bestPlatIcon} ${c.bestPlat}</span></div>
+      <div><button class="ot-clip-btn" style="background:${c.color}" onclick="showToast('🎬 Start clipping ${c.name} — sign up free!')">Clip →</button></div>
+    </div>`).join('');
+}
+
+buildCreatorGrid();
+buildPlatBars();
+buildOppTable();
+
+// live clip opportunity counter
+let clipOpp=4820000;
+setInterval(()=>{clipOpp+=Math.floor(Math.random()*8)+3;const el=document.getElementById('liveClipOpp');if(el)el.textContent=clipOpp.toLocaleString()+'+'},1800);
+let newVids=14;
+setInterval(()=>{if(Math.random()>.7){newVids++;const el=document.getElementById('newVidsToday');if(el)el.textContent=newVids}},8000);
+// Get ID from youtube.com/watch?v=XXXXXXX — paste the XXXXXXX part
+const CLIPS=[
+  // ── COLUMN 0: MrBeast + IShowSpeed + Kai Cenat ──────────────────────────
+  {vid:'o_jCPL_EPXQ',creator:'MrBeast',init:'MB',col:0,c:'#3b82f6',bg:'#0d1240',
+   sc:'vs-fire',score:'🔥 97',hdr:'"$1,000,000 to Random Strangers"',
+   ttl:'POV: a million on the line 💀',v:'2.4M',d:'0:47',caps:['ONE','MILLION','DOLLARS 💀'],hl:1},
+  {vid:'wOmjnioNulo',creator:'MrBeast',init:'MB',col:0,c:'#3b82f6',bg:'#0a1a3a',
+   sc:'vs-fire',score:'🔥 95',hdr:'"Last To Leave Wins $500,000"',
+   ttl:"7 days with no sleep straight 😳",v:'1.8M',d:'0:33',caps:['LAST','TO LEAVE','WINS 🏆'],hl:2},
+  {vid:'9IPiHKtJVa0',creator:'IShowSpeed',init:'IS',col:0,c:'#ef4444',bg:'#3a0a0a',
+   sc:'vs-fire',score:'💥 99',hdr:'"Speed Goes CRAZY in Japan 🇯🇵"',
+   ttl:"Speed's reaction broke the internet 💀",v:'4.1M',d:'0:28',caps:['BRO','WHAT','HAPPENED 😭'],hl:2},
+  {vid:'3fumBcfxoLM',creator:'IShowSpeed',init:'IS',col:0,c:'#ef4444',bg:'#2a0a1a',
+   sc:'vs-fire',score:'🔥 98',hdr:'"Speed Meets Ronaldo LIVE 🐐"',
+   ttl:'His eyes when Ronaldo walked in 😱',v:'6.8M',d:'0:22',caps:['WAIT','THATS','RONALDO?! 🐐'],hl:2},
+  {vid:'I7D1JRSG5Y8',creator:'Kai Cenat',init:'KC',col:0,c:'#10b981',bg:'#0a1a0a',
+   sc:'vs-fire',score:'💥 99',hdr:'"Kai Breaks Twitch Record LIVE"',
+   ttl:'Chat went INSANE when this happened 🤯',v:'5.6M',d:'0:52',caps:['NEW','TWITCH','RECORD!! 🏆'],hl:2},
+  {vid:'fPO76Jlnz6c',creator:'Kai Cenat',init:'KC',col:0,c:'#10b981',bg:'#001a2a',
+   sc:'vs-fire',score:'🔥 96',hdr:'"Subathon Hits 300K Live Viewers"',
+   ttl:'The moment chat realized history 🔥',v:'7.2M',d:'0:38',caps:['CHAT','IS GOING','CRAZY!! 🔥'],hl:2},
+
+  // ── COLUMN 1: Adin Ross + Neon + Marlon ─────────────────────────────────
+  // 👇 Paste Adin Ross video IDs below (find on youtube.com/@AdinRoss)
+  {vid:'',creator:'Adin Ross',init:'AR',col:1,c:'#f59e0b',bg:'linear-gradient(160deg,#2a1a00,#1a0a05)',
+   sc:'vs-fire',score:'🔥 94',hdr:'"Adin Goes Absolutely OFF Live"',
+   ttl:'Nobody expected this moment 😤',v:'3.1M',d:'0:41',caps:['NO','WAY','THIS REAL?! 💀'],hl:2},
+  {vid:'',creator:'Adin Ross',init:'AR',col:1,c:'#f59e0b',bg:'linear-gradient(160deg,#3a2a00,#0a0a1a)',
+   sc:'vs-hot',score:'⚡ 91',hdr:'"Adin\'s Most Unhinged Moment Ever"',
+   ttl:'Stream went completely silent 😱',v:'2.3M',d:'0:35',caps:['THE WHOLE','CHAT','FROZE 😱'],hl:1},
+  // 👇 Paste Neon video IDs below
+  {vid:'',creator:'Neon',init:'NE',col:1,c:'#a855f7',bg:'linear-gradient(160deg,#1a003a,#0a1a2a)',
+   sc:'vs-hot',score:'⚡ 92',hdr:'"Neon\'s Most Viral Clip of 2025"',
+   ttl:'This clip made him blow up overnight 🚀',v:'2.1M',d:'0:35',caps:['THIS','WENT','VIRAL 🔥'],hl:2},
+  {vid:'',creator:'Neon',init:'NE',col:1,c:'#a855f7',bg:'linear-gradient(160deg,#2a003a,#001a10)',
+   sc:'vs-hot',score:'🔥 88',hdr:'"Neon Loses His Mind LIVE"',
+   ttl:'Chat exploded when this happened 😭',v:'1.6M',d:'0:29',caps:['STREAM','ENDED','AFTER THIS 💀'],hl:1},
+  // 👇 Paste Marlon video IDs below
+  {vid:'',creator:'Marlon',init:'MA',col:1,c:'#ec4899',bg:'linear-gradient(160deg,#1a1a00,#2a0a00)',
+   sc:'vs-hot',score:'🔥 89',hdr:'"Marlon Goes OFF — Nobody Ready"',
+   ttl:'The moment that broke everyone 💀',v:'1.4M',d:'0:44',caps:['NOT A','SINGLE','PERSON READY 😂'],hl:2},
+  {vid:'',creator:'Marlon',init:'MA',col:1,c:'#ec4899',bg:'linear-gradient(160deg,#2a001a,#0a1a00)',
+   sc:'vs-solid',score:'✅ 86',hdr:'"Marlon\'s Funniest Clip of 2025"',
+   ttl:'Clipped a million times 🎬',v:'900K',d:'0:31',caps:['NOBODY','CLIPPED','THIS FASTER 🎬'],hl:1},
+
+  // ── COLUMN 2: Clix (Clavicular) + Adin + MrBeast + Speed + Kai ──────────
+  // 👇 Paste Clix video IDs below (find on youtube.com/@Clix)
+  {vid:'',creator:'Clix',init:'CX',col:2,c:'#6366f1',bg:'linear-gradient(160deg,#1a0a3a,#001a2a)',
+   sc:'vs-fire',score:'🔥 93',hdr:'"Clix Goes Insane in Ranked"',
+   ttl:'This play broke gaming Twitter 🎮',v:'3.8M',d:'0:25',caps:['HOW IS','THIS','EVEN LEGAL?! 🎮'],hl:1},
+  {vid:'',creator:'Clix',init:'CX',col:2,c:'#6366f1',bg:'linear-gradient(160deg,#0a1a3a,#1a001a)',
+   sc:'vs-hot',score:'⚡ 90',hdr:'"Clix 1v3 — Most Viewed Clip"',
+   ttl:'The clutch that made him famous 💀',v:'2.7M',d:'0:33',caps:['1v3','NOBODY','SURVIVING THIS 🔥'],hl:0},
+  {vid:'o_jCPL_EPXQ',creator:'MrBeast',init:'MB',col:2,c:'#3b82f6',bg:'#0d1240',
+   sc:'vs-solid',score:'✅ 85',hdr:'"MrBeast\'s Wildest Stunt Yet"',
+   ttl:'His whole team was SHAKING 😂',v:'1.2M',d:'0:38',caps:['THE','WHOLE TEAM','SHAKING 😂'],hl:2},
+  {vid:'9IPiHKtJVa0',creator:'IShowSpeed',init:'IS',col:2,c:'#ef4444',bg:'#3a0505',
+   sc:'vs-fire',score:'💥 97',hdr:'"Speed\'s Craziest Stream Moment"',
+   ttl:'Clip got 500K views in 24 hours 🔥',v:'5.1M',d:'0:19',caps:['500K','VIEWS','OVERNIGHT 🚀'],hl:1},
+  {vid:'I7D1JRSG5Y8',creator:'Kai Cenat',init:'KC',col:2,c:'#10b981',bg:'#001a0a',
+   sc:'vs-fire',score:'🔥 95',hdr:'"Kai\'s Subathon World Record"',
+   ttl:'Most viewed Twitch moment ever 🏆',v:'8.9M',d:'0:45',caps:['WORLD','RECORD','BROKEN!! 🏆'],hl:2},
+  {vid:'',creator:'Adin Ross',init:'AR',col:2,c:'#f59e0b',bg:'linear-gradient(160deg,#1a1a00,#2a0005)',
+   sc:'vs-hot',score:'🔥 91',hdr:'"Adin\'s Most Iconic Stream Moment"',
+   ttl:'The clip everyone shared that day 🤯',v:'4.2M',d:'0:27',caps:['EVERYONE','SHARED','THIS CLIP 🤯'],hl:2},
+];
+
+function cardHTML(c){
+  const hasVid=!!c.vid;
+  const thumbBg=hasVid
+    ?`background-image:url(https://img.youtube.com/vi/${c.vid}/hqdefault.jpg);background-size:cover;background-position:center top`
+    :`background:${c.bg}`;
+  const iframeTag=hasVid
+    ?`<iframe class="cw-vid" data-src="https://www.youtube.com/embed/${c.vid}?autoplay=1&mute=1&controls=0&loop=1&playlist=${c.vid}&playsinline=1&rel=0" frameborder="0" allow="autoplay"></iframe>`
+    :'';
+  const caps=c.caps.map((w,i)=>`<span class="cap${i===c.hl?' hl':''}">${w}</span> `).join('');
+  return `<div class="cw-card" onmouseenter="cwOn(this)" onmouseleave="cwOff(this)" onclick="openModal('${c.vid}','${c.creator}')">
+  <div class="cw-thumb" style="${thumbBg}"></div>${iframeTag}
+  <div class="cw-ov"></div>
+  <div class="cw-hd"><div class="cw-chip"><span class="cw-chip-d"></span>AI HEADER</div><div class="cw-ht">${c.hdr}</div></div>
+  <div class="cw-sc ${c.sc}">${c.score}</div>
+  <div class="cw-wm"><span style="font-size:.55rem">⚡</span><span class="cw-wm-t">ClipSpeedAI</span></div>
+  <div class="cw-caps">${caps}</div>
+  <div class="cw-bot"><div class="cw-cr"><div class="cw-av2" style="background:${c.c}">${c.init}</div><div class="cw-cn">${c.creator}</div></div><div class="cw-ttl">${c.ttl}</div><div class="cw-sts"><span class="cw-st">👁 ${c.v} pred</span><span class="cw-st">⏱ ${c.d}</span></div></div>
+  <div class="cwp">▶</div>
+</div>`;}
+
+function buildWall(){
+  [0,1,2].forEach(col=>{
+    const el=document.getElementById('col'+col);
+    if(!el)return;
+    const clips=CLIPS.filter(c=>c.col===col);
+    el.innerHTML=[...clips,...clips].map(cardHTML).join(''); // duplicate for seamless loop
+  });
+}
+buildWall();
+
+function cwOn(card){const f=card.querySelector('.cw-vid');if(f&&!f.src&&f.dataset.src)f.src=f.dataset.src;card.classList.add('pw')}
+function cwOff(card){card.classList.remove('pw');const f=card.querySelector('.cw-vid');if(f)f.src=''}
+
+// ── VIDEO MODAL ──
+function openModal(vid,creator){
+  if(!vid){showToast('🔓 Sign up free to watch & export all clips!');goTo('#pricing');return;}
+  const m=document.getElementById('vidModal'),f=document.getElementById('vidFrame');
+  if(!m||!f)return;
+  f.src=`https://www.youtube.com/embed/${vid}?autoplay=1&controls=1&rel=0&modestbranding=1`;
+  m.classList.add('show');document.body.style.overflow='hidden';
+}
+function closeModal(e){
+  if(e&&e.target&&e.target.id!=='vidModal'&&!e.target.classList.contains('vid-modal-close'))return;
+  const m=document.getElementById('vidModal'),f=document.getElementById('vidFrame');
+  if(m)m.classList.remove('show');if(f)f.src='';document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal({target:{id:'vidModal'}});});
+const CLIPS=[
+  {vid:'o_jCPL_EPXQ',creator:'MrBeast',init:'MB',color:'linear-gradient(135deg,#3b82f6,#7c3aed)',bg:'linear-gradient(160deg,#0d1240,#1a0040)',scoreClass:'vs-fire',label:'🔥 97',aiHeader:'"I Gave $1M to Random Strangers"',title:'POV: $1,000,000 on the line 💀',views:'2.4M',dur:'0:47',emoji:'🏆'},
+  {vid:'wOmjnioNulo',creator:'MrBeast',init:'MB',color:'linear-gradient(135deg,#3b82f6,#7c3aed)',bg:'linear-gradient(160deg,#0a1a3a,#0a2a10)',scoreClass:'vs-fire',label:'🔥 95',aiHeader:'"Last To Leave Wins $500K"',title:"Didn't sleep for 7 days 😳",views:'1.8M',dur:'0:33',emoji:'💰'},
+  {vid:'9IPiHKtJVa0',creator:'IShowSpeed',init:'IS',color:'linear-gradient(135deg,#ef4444,#f59e0b)',bg:'linear-gradient(160deg,#3a0a0a,#1a0505)',scoreClass:'vs-fire',label:'💥 99',aiHeader:'"Speed Goes CRAZY in Japan 🇯🇵"',title:"Speed's reaction broke the internet 💀",views:'4.1M',dur:'0:28',emoji:'⚡'},
+  {vid:'3fumBcfxoLM',creator:'IShowSpeed',init:'IS',color:'linear-gradient(135deg,#ef4444,#f59e0b)',bg:'linear-gradient(160deg,#2a0a1a,#3a1500)',scoreClass:'vs-fire',label:'🔥 98',aiHeader:'"Speed vs Ronaldo — Most Watched"',title:'His eyes when Ronaldo walked in 😱',views:'6.8M',dur:'0:22',emoji:'🎮'},
+  {vid:'I7D1JRSG5Y8',creator:'Kai Cenat',init:'KC',color:'linear-gradient(135deg,#10b981,#3b82f6)',bg:'linear-gradient(160deg,#0a1a0a,#003a1a)',scoreClass:'vs-fire',label:'💥 99',aiHeader:'"Kai Breaks Twitch Record LIVE 🏆"',title:'Chat went INSANE when this happened 🤯',views:'5.6M',dur:'0:52',emoji:'👑'},
+  {vid:'fPO76Jlnz6c',creator:'Kai Cenat',init:'KC',color:'linear-gradient(135deg,#10b981,#3b82f6)',bg:'linear-gradient(160deg,#001a2a,#1a003a)',scoreClass:'vs-fire',label:'🔥 96',aiHeader:'"Subathon Hits 300K Live Viewers"',title:'The moment chat realized history 🔥',views:'7.2M',dur:'0:38',emoji:'🎯'},
+  {vid:'',creator:'Neon',init:'NE',color:'linear-gradient(135deg,#a855f7,#ec4899)',bg:'linear-gradient(160deg,#1a003a,#0a1a2a)',scoreClass:'vs-hot',label:'⚡ 91',aiHeader:'"Neon\'s Craziest Moment Ever"',title:'This clip made him go viral overnight 🚀',views:'2.1M',dur:'0:35',emoji:'🌟'},
+  {vid:'',creator:'Marlon',init:'MA',color:'linear-gradient(135deg,#f59e0b,#ef4444)',bg:'linear-gradient(160deg,#1a1a00,#2a0a00)',scoreClass:'vs-hot',label:'🔥 89',aiHeader:'"Marlon Goes OFF — Nobody Expected"',title:'The moment that broke everyone 💀',views:'1.4M',dur:'0:44',emoji:'🔥'},
+  {vid:'o_jCPL_EPXQ',creator:'MrBeast',init:'MB',color:'linear-gradient(135deg,#3b82f6,#7c3aed)',bg:'linear-gradient(160deg,#003a2a,#001a3a)',scoreClass:'vs-solid',label:'✅ 87',aiHeader:'"Ate Nothing But Pizza for 30 Days"',title:"His face when he saw the bill 💀💀",views:'1.1M',dur:'0:29',emoji:'😂'},
+  {vid:'9IPiHKtJVa0',creator:'IShowSpeed',init:'IS',color:'linear-gradient(135deg,#ef4444,#f59e0b)',bg:'linear-gradient(160deg,#1a0030,#001a10)',scoreClass:'vs-fire',label:'🔥 94',aiHeader:'"Speed Loses His Mind LIVE 😂"',title:'Nobody expected this on stream 😭',views:'3.2M',dur:'0:41',emoji:'😤'},
+];
+
+function renderClips(){
+  const grid=document.getElementById('clipGrid');
+  if(!grid)return;
+  grid.innerHTML=CLIPS.map((c,i)=>{
+    const thumb=c.vid?`https://img.youtube.com/vi/${c.vid}/maxresdefault.jpg`:'';
+    const thumbStyle=thumb?`background-image:url(${thumb});background-color:#111`:c.bg;
+    const iframeEl=c.vid?`<iframe class="cc-iframe" data-src="https://www.youtube.com/embed/${c.vid}?autoplay=1&mute=1&controls=0&loop=1&playlist=${c.vid}&playsinline=1&rel=0" frameborder="0" allow="autoplay"></iframe>`:`<div style="position:absolute;inset:0;${c.bg};display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:.35">${c.emoji}</div>`;
+    return `<div class="clip-card" data-vid="${c.vid}" onmouseenter="hoverPlay(this)" onmouseleave="hoverStop(this)" onclick="openModal('${c.vid}','${c.creator}')">
+      <div class="cc-thumb" style="${thumbStyle}"></div>
+      ${iframeEl}
+      <div class="cc-overlay"></div>
+      <div class="wm">ClipSpeedAI</div>
+      <div class="cc-header"><div class="ai-chip"><span class="ai-dot2"></span>AI HEADER</div><div class="cc-hl-title">${c.aiHeader}</div></div>
+      <div class="vs-pill ${c.scoreClass}">${c.label}</div>
+      <div class="cc-play">▶</div>
+      <div class="cc-bottom">
+        <div class="cc-creator"><div class="cc-av" style="background:${c.color}">${c.init}</div><div class="cc-cname">${c.creator}</div></div>
+        <div class="cc-title">${c.title}</div>
+        <div class="cc-stats"><div class="cc-stat">👁 ${c.views} pred</div><div class="cc-stat">⏱ ${c.dur}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderClips();
+
+// ── HOVER PLAY / STOP ──
+function hoverPlay(card){
+  const iframe=card.querySelector('.cc-iframe');
+  if(!iframe)return;
+  if(!iframe.src&&iframe.dataset.src)iframe.src=iframe.dataset.src;
+  card.classList.add('playing');
+}
+function hoverStop(card){
+  card.classList.remove('playing');
+  const iframe=card.querySelector('.cc-iframe');
+  if(iframe){iframe.src='';iframe.removeAttribute('src');}
+}
+
+// ── VIDEO MODAL ──
+function openModal(vid,creator){
+  if(!vid){showToast('🔓 Sign up free to watch & export all clips!');goTo('#pricing');return;}
+  const modal=document.getElementById('vidModal');
+  const frame=document.getElementById('vidFrame');
+  if(!modal||!frame)return;
+  frame.src=`https://www.youtube.com/embed/${vid}?autoplay=1&controls=1&rel=0&modestbranding=1`;
+  modal.classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeModal(e){
+  if(e&&e.target&&e.target.id!=='vidModal'&&!e.target.classList.contains('vid-modal-close'))return;
+  const modal=document.getElementById('vidModal');
+  const frame=document.getElementById('vidFrame');
+  if(modal)modal.classList.remove('show');
+  if(frame)frame.src='';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal({target:document.getElementById('vidModal')});});
 
 // ── CLIP COUNTER ──
 let cc=164,tc=164;
