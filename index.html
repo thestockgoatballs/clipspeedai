@@ -705,42 +705,87 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 24px;max-wid
       <span>Annual</span>
       <span class="save-pill">Save 40%</span>
     </div>
-    <div class="price-grid">
-      <!-- FREE -->
-      <div class="pc">
+    <!-- PRICING NOTE -->
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);border-radius:50px;padding:6px 18px;font-size:.78rem;color:#10b981;font-weight:600;margin-bottom:8px">🎯 Start free → upgrade to Starter → scale to Pro or Agency. No surprise charges.</div>
+
+    <div class="bill-tog">
+      <span>Monthly</span>
+      <div class="tog-track" id="tog" onclick="toggleBill()"><div class="tog-thumb" id="tthumb"></div></div>
+      <span>Annual</span>
+      <span class="save-pill">Save 40%</span>
+    </div>
+
+    <div class="price-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+
+      <!-- FREE TRIAL -->
+      <div class="pc" style="border-style:dashed;border-color:rgba(255,255,255,.1)">
         <div class="plan-name">Free Trial</div>
         <div class="plan-price">$0<span class="per"> / 14 days</span></div>
-        <div class="plan-desc">Explore the full power of ClipSpeedAI. No card required.</div>
-        <div class="wm-badge">⚠️ Clips include ClipSpeedAI watermark</div>
+        <div class="plan-desc">Dip your toes in. No credit card. No commitment. See the magic before you pay a cent.</div>
+        <div class="wm-badge">⚠️ ClipSpeedAI watermark on all exports</div>
         <ul class="plan-feats">
-          <li><span class="ck">✓</span>10 clips per month</li>
+          <li><span class="ck">✓</span>Up to 10 clips total</li>
           <li><span class="ck">✓</span>AI viral scoring on all clips</li>
-          <li><span class="ck">✓</span>5 AI viral header styles</li>
-          <li><span class="ck">✓</span>Auto-captions (3 styles)</li>
-          <li><span class="ck">✓</span>Publish to 2 platforms</li>
-          <li><span class="ck">✓</span>720p export</li>
-          <li><span class="ck" style="color:#f59e0b">⚠️</span><span class="wm-note">ClipSpeedAI watermark on all exports</span></li>
+          <li><span class="ck">✓</span>3 AI viral header styles</li>
+          <li><span class="ck">✓</span>Auto-captions (basic style)</li>
+          <li><span class="ck">✓</span>Publish to 1 platform only</li>
+          <li><span class="ck">✓</span>720p export quality</li>
+          <li><span class="ck" style="color:#f59e0b">⚠️</span><span class="wm-note">Watermark on every export</span></li>
+          <li><span class="ck" style="color:#f59e0b">⚠️</span><span class="wm-note">Clips restricted to 10 total</span></li>
         </ul>
-        <button class="pbtn out" onclick="showToast('✅ Free trial activated! Check your email.')">Start Free Trial →</button>
-        <div class="spots" style="margin-top:8px;font-size:.72rem">Upgrade anytime to remove watermark instantly</div>
+        <button class="pbtn out" onclick="showToast('✅ Free trial activated! Check your email.')">Start Free — No Card Needed →</button>
+        <!-- UPSELL NUDGE -->
+        <div style="margin-top:12px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(59,130,246,.06));border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:12px;text-align:left">
+          <div style="font-size:.72rem;font-weight:700;color:#c084fc;margin-bottom:5px">⚡ Ready to go watermark-free?</div>
+          <div style="font-size:.75rem;color:var(--m);line-height:1.5">Upgrade to <strong style="color:#fff">Starter for just $20/mo</strong> — remove the watermark, get unlimited clips & publish to 3 platforms.</div>
+          <div style="font-size:.72rem;color:#10b981;font-weight:700;margin-top:6px;cursor:pointer" onclick="goTo('#starter-plan')">→ See Starter Plan below</div>
+        </div>
       </div>
+
+      <!-- STARTER -->
+      <div class="pc" id="starter-plan">
+        <div class="pop-tag" style="background:linear-gradient(135deg,#10b981,#3b82f6)">🌱 Best First Step</div>
+        <div class="plan-name">Starter</div>
+        <div class="plan-price" id="starterP">$20<span class="per"> / mo</span></div>
+        <div class="plan-desc">Perfect for new creators building their first faceless channel. No watermark. No limits on the basics.</div>
+        <ul class="plan-feats">
+          <li><span class="ck">✓</span>50 clips per month</li>
+          <li><span class="ck">✓</span><strong>No watermark — ever</strong></li>
+          <li><span class="ck">✓</span>AI viral scoring on all clips</li>
+          <li><span class="ck">✓</span>15 AI viral header styles</li>
+          <li><span class="ck">✓</span>Auto-captions (5 styles)</li>
+          <li><span class="ck">✓</span>Publish to 3 platforms</li>
+          <li><span class="ck">✓</span>1080p export quality</li>
+          <li><span class="ck">✓</span>Hook Generator (50 styles)</li>
+          <li><span class="ck">✓</span>Basic analytics dashboard</li>
+        </ul>
+        <button class="pbtn out" style="border-color:rgba(16,185,129,.4);color:#10b981" onclick="showToast('🔒 Redirecting to Stripe checkout…')">Get Starter — $20/mo →</button>
+        <div class="spots" style="margin-top:8px">💡 Save <b style="color:#10b981">$96/yr</b> on the annual plan</div>
+        <!-- UPSELL TO PRO -->
+        <div style="margin-top:12px;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(236,72,153,.04));border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:12px;text-align:left">
+          <div style="font-size:.72rem;font-weight:700;color:#c084fc;margin-bottom:4px">🚀 Serious about scaling?</div>
+          <div style="font-size:.75rem;color:var(--m);line-height:1.5"><strong style="color:#fff">Pro at $40/mo</strong> gives you unlimited clips, all 300+ header styles, 5 platforms & full automation.</div>
+          <div style="font-size:.72rem;color:#c084fc;font-weight:700;margin-top:5px;cursor:pointer" onclick="goTo('#pro-plan')">→ See Pro Plan</div>
+        </div>
+      </div>
+
       <!-- PRO -->
-      <div class="pc pop">
+      <div class="pc pop" id="pro-plan">
         <div class="pop-tag">⭐ Most Popular</div>
         <div class="plan-name">Pro</div>
-        <div class="plan-price" id="proP">$49<span class="per"> / mo</span></div>
-        <div class="plan-desc">For serious creators scaling to 100K subscribers fast.</div>
+        <div class="plan-price" id="proP">$40<span class="per"> / mo</span></div>
+        <div class="plan-desc">For creators who are serious about going viral and building a real income online.</div>
         <div class="value-stack">
-          <div class="vs-title">💎 Everything included — value breakdown</div>
-          <div class="vs-item"><span>AI Clip Engine</span><span>$197/mo</span></div>
-          <div class="vs-item"><span>Viral Header Generator</span><span>$97/mo</span></div>
+          <div class="vs-title">💎 What you get — value breakdown</div>
+          <div class="vs-item"><span>AI Clip Engine (unlimited)</span><span>$197/mo</span></div>
+          <div class="vs-item"><span>300+ Viral Header Styles</span><span>$97/mo</span></div>
           <div class="vs-item"><span>Hook Generator</span><span>$67/mo</span></div>
           <div class="vs-item"><span>5-Platform Publisher</span><span>$47/mo</span></div>
           <div class="vs-total"><span>Total Value</span><span>$408/mo</span></div>
-          <div class="vs-total" style="font-size:.85rem"><span>Your Price Today</span><span style="color:#10b981;font-size:1rem">$49/mo</span></div>
+          <div class="vs-total" style="font-size:.85rem"><span>Your Price Today</span><span style="color:#10b981;font-size:1.05rem" id="proSave">$40/mo</span></div>
         </div>
         <ul class="plan-feats">
-          <li><span class="ck">✓</span>Unlimited clips generated</li>
+          <li><span class="ck">✓</span><strong>Unlimited clips generated</strong></li>
           <li><span class="ck">✓</span><strong>No watermarks — ever</strong></li>
           <li><span class="ck">✓</span>All 300+ AI viral header styles</li>
           <li><span class="ck">✓</span>Hook Generator (300 styles)</li>
@@ -750,15 +795,17 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 24px;max-wid
           <li><span class="ck">✓</span>Trending audio matcher</li>
           <li><span class="ck">✓</span>1080p + Shorts export</li>
           <li><span class="ck">✓</span>Full analytics dashboard</li>
+          <li><span class="ck">✓</span>40% affiliate commission rate</li>
         </ul>
-        <button class="pbtn fil" onclick="showToast('🔒 Redirecting to secure Stripe checkout…')">Get Pro — Remove Watermark →</button>
+        <button class="pbtn fil" onclick="showToast('🔒 Redirecting to Stripe checkout…')">Get Pro — Start Now →</button>
         <div class="spots">⚡ <b>Only 83 Pro spots</b> left at this price</div>
       </div>
-      <!-- ELITE -->
+
+      <!-- AGENCY -->
       <div class="pc">
-        <div class="plan-name">Elite / Agency</div>
-        <div class="plan-price" id="eliteP">$149<span class="per"> / mo</span></div>
-        <div class="plan-desc">Run 10 faceless channels simultaneously. Built for agencies.</div>
+        <div class="plan-name">Agency</div>
+        <div class="plan-price" id="eliteP">$120<span class="per"> / mo</span></div>
+        <div class="plan-desc">Run up to 10 faceless channels at once. Built for agencies & power creators.</div>
         <ul class="plan-feats">
           <li><span class="ck">✓</span>Everything in Pro</li>
           <li><span class="ck">✓</span><strong>No watermarks on any channel</strong></li>
@@ -771,8 +818,10 @@ footer{border-top:1px solid rgba(255,255,255,.05);padding:48px 24px 24px;max-wid
           <li><span class="ck">✓</span>API access</li>
           <li><span class="ck">✓</span>50% affiliate commission rate</li>
         </ul>
-        <button class="pbtn wht" onclick="showToast('🔒 Redirecting to secure Stripe checkout…')">Get Elite →</button>
+        <button class="pbtn wht" onclick="showToast('🔒 Redirecting to Stripe checkout…')">Get Agency →</button>
+        <div class="spots">🏢 Perfect for managing client channels</div>
       </div>
+
     </div>
     <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:18px">
       <span style="font-size:.75rem;color:var(--m)">🔒 Stripe-secured payments</span>
@@ -883,7 +932,15 @@ setInterval(()=>{gmi=(gmi+1)%genMsgs.length;const el=document.getElementById('ge
 
 // ── BILLING TOGGLE ──
 let ann=false;
-function toggleBill(){ann=!ann;document.getElementById('tog').classList.toggle('on',ann);document.getElementById('proP').innerHTML=ann?'$29<span class="per"> / mo <small style="color:#10b981;font-size:.7rem"> billed annually</small></span>':'$49<span class="per"> / mo</span>';document.getElementById('eliteP').innerHTML=ann?'$89<span class="per"> / mo <small style="color:#10b981;font-size:.7rem"> billed annually</small></span>':'$149<span class="per"> / mo</span>'}
+function toggleBill(){
+  ann=!ann;
+  document.getElementById('tog').classList.toggle('on',ann);
+  const note='<small style="color:#10b981;font-size:.68rem"> billed annually</small>';
+  document.getElementById('starterP').innerHTML=ann?`$12<span class="per"> / mo ${note}</span>`:'$20<span class="per"> / mo</span>';
+  document.getElementById('proP').innerHTML=ann?`$24<span class="per"> / mo ${note}</span>`:'$40<span class="per"> / mo</span>';
+  document.getElementById('proSave').textContent=ann?'$24/mo':'$40/mo';
+  document.getElementById('eliteP').innerHTML=ann?`$72<span class="per"> / mo ${note}</span>`:'$120<span class="per"> / mo</span>';
+}
 
 // ── INCOME CALCULATOR ──
 const viewMap=[5000,15000,50000,150000,300000,500000,1000000,2000000,3000000,5000000];
