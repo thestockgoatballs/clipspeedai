@@ -1,0 +1,319 @@
+<!-- 
+  ═══════════════════════════════════════════════════════════════
+  CLIPSPEEDAI APP INJECTOR — Add this RIGHT BEFORE </body> tag
+  in your existing landing page HTML file.
+  
+  This adds:
+  1. Full ClipSpeedAI Pro software with dashboard
+  2. React runtime (CDN)
+  3. App launch/back navigation
+  4. All 12 creators (MrBeast, IShowSpeed, Kai Cenat, PewDiePie, 
+     SteveWillDoIt, Ninja, Clavicular, Adin Ross, Neon, Clix, Marlon, xQc)
+  ═══════════════════════════════════════════════════════════════
+-->
+
+<!-- APP OVERLAY -->
+<style>
+.app-overlay{display:none;position:fixed;inset:0;z-index:100000;background:#07070a}
+body.app-mode .app-overlay{display:block}
+body.app-mode{overflow:hidden}
+body.app-mode nav{display:none!important}
+</style>
+
+<div class="app-overlay" id="appOverlay">
+  <div id="app-root" style="height:100vh;width:100vw"></div>
+</div>
+
+<!-- React CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<!-- App Launch/Back Functions -->
+<script>
+function launchApp(){
+  document.body.classList.add('app-mode');
+  document.getElementById('appOverlay').style.display='block';
+  window.scrollTo(0,0);
+  try{closePop()}catch(e){}
+}
+function backToLanding(){
+  document.body.classList.remove('app-mode');
+  document.getElementById('appOverlay').style.display='none';
+}
+window.backToLanding=backToLanding;
+
+/* ═══ UPDATE: Add new creators to existing CREATORS array ═══ */
+if(typeof CREATORS!=='undefined'&&Array.isArray(CREATORS)){
+  const lastItem=CREATORS.pop(); // remove "+ 10,000 more"
+  CREATORS.push(
+    {name:'Clavicular',handle:'@Clavicular',init:'CL',color:'linear-gradient(135deg,#14b8a6,#06b6d4)',border:'#14b8a6',glow:'rgba(20,184,166,.25)',subs:'3.2M',totalViews:'1.2B+',videos:'400+',clipsAvail:'28,000+',viralScore:90,bestPlat:'TikTok',bestPlatIcon:'♪',platforms:['YouTube','TikTok','Instagram'],trending:true,isNew:true,desc:'Comedy and skit king. Short-form content that explodes on TikTok — perfect for clipping.'},
+    {name:'SteveWillDoIt',handle:'@SteveWillDoIt',init:'SW',color:'linear-gradient(135deg,#f97316,#ef4444)',border:'#f97316',glow:'rgba(249,115,22,.25)',subs:'12M',totalViews:'6B+',videos:'700+',clipsAvail:'85,000+',viralScore:92,bestPlat:'YouTube',bestPlatIcon:'▶',platforms:['YouTube','TikTok','Instagram','Kick'],trending:true,isNew:false,desc:'The stunt and challenge legend. Every video has 10+ viral-worthy moments ready to clip.'},
+    {name:'PewDiePie',handle:'@PewDiePie',init:'PD',color:'linear-gradient(135deg,#dc2626,#991b1b)',border:'#dc2626',glow:'rgba(220,38,38,.25)',subs:'111M',totalViews:'29B+',videos:'4,700+',clipsAvail:'350,000+',viralScore:95,bestPlat:'YouTube',bestPlatIcon:'▶',platforms:['YouTube','TikTok','Instagram','X'],trending:false,isNew:false,desc:'The OG YouTube king. Commentary and gaming clips with massive built-in audience demand.'},
+    {name:'Ninja',handle:'@Ninja',init:'NJ',color:'linear-gradient(135deg,#2563eb,#1d4ed8)',border:'#2563eb',glow:'rgba(37,99,235,.25)',subs:'24M',totalViews:'10B+',videos:'2,200+',clipsAvail:'140,000+',viralScore:91,bestPlat:'YouTube',bestPlatIcon:'▶',platforms:['YouTube','TikTok','Twitch','Instagram'],trending:false,isNew:false,desc:'Fortnite legend and gaming icon. Stream highlights and epic plays clip perfectly for Shorts.'}
+  );
+  if(lastItem)CREATORS.push(lastItem);
+  // Re-render grids with new creators
+  if(typeof buildCreatorGrid==='function')buildCreatorGrid();
+  if(typeof buildOppTable==='function')buildOppTable();
+}
+
+/* ═══ UPDATE: Add new creators to marquee color map ═══ */
+if(typeof cc2!=='undefined'){
+  cc2.CL='linear-gradient(135deg,#14b8a6,#06b6d4)';
+  cc2.SW='linear-gradient(135deg,#f97316,#ef4444)';
+  cc2.PD='linear-gradient(135deg,#dc2626,#991b1b)';
+  cc2.NJ='linear-gradient(135deg,#2563eb,#1d4ed8)';
+}
+
+/* ═══ UPDATE: Add new creator belt chips dynamically ═══ */
+(function(){
+  const belt=document.querySelector('.creator-row');
+  if(!belt)return;
+  const kickChip=Array.from(belt.children).find(c=>c.textContent.includes('Any Kick'));
+  if(!kickChip)return;
+  const newCreators=[
+    {name:'Clavicular',color:'#14b8a6'},
+    {name:'SteveWillDoIt',color:'#f97316'},
+    {name:'PewDiePie',color:'#dc2626'},
+    {name:'Ninja',color:'#2563eb'},
+  ];
+  newCreators.forEach(cr=>{
+    const chip=document.createElement('div');
+    chip.className='cr-chip';
+    chip.innerHTML=`<div class="cr-dot" style="background:${cr.color}"></div>${cr.name}`;
+    belt.insertBefore(chip,kickChip);
+  });
+})();
+
+/* ═══ UPDATE: Patch nav buttons to launch app ═══ */
+(function(){
+  const loginBtn=document.querySelector('.nav-login');
+  if(loginBtn){loginBtn.onclick=function(){launchApp()};loginBtn.textContent='Log in';}
+  const navCta=document.querySelector('.nav-cta');
+  if(navCta){navCta.onclick=function(){launchApp()};navCta.innerHTML='🚀 Launch App';}
+})();
+
+/* ═══ UPDATE: Patch hero subtitle text ═══ */
+(function(){
+  const heroSub=document.querySelector('.hero-sub');
+  if(heroSub&&heroSub.textContent.includes('Neon or Marlon')){
+    heroSub.innerHTML=heroSub.innerHTML.replace(
+      'Paste any video from MrBeast, IShowSpeed, Kai Cenat, Neon or Marlon.',
+      'Paste any video from MrBeast, IShowSpeed, Kai Cenat, PewDiePie, SteveWillDoIt, Ninja, Clavicular, Neon or Marlon.'
+    );
+  }
+})();
+
+/* ═══ UPDATE: Patch FAQ to include new creators ═══ */
+(function(){
+  document.querySelectorAll('.fq-q').forEach(q=>{
+    if(q.textContent.includes('Neon and Marlon')){
+      q.innerHTML=q.innerHTML.replace('Neon and Marlon','PewDiePie, Ninja, Clavicular, SteveWillDoIt, Kai Cenat, Neon and Marlon');
+    }
+  });
+  document.querySelectorAll('.fq-a p').forEach(p=>{
+    if(p.textContent.includes('paste any public YouTube, Twitch, or Kick URL and ClipSpeedAI will analyze')){
+      p.textContent='Yes — paste any public YouTube, Twitch, or Kick URL. ClipSpeedAI has enhanced detection for all 12 featured creators plus works with any public video from any creator.';
+    }
+  });
+})();
+
+/* ═══ UPDATE: Add new creator marquee headers ═══ */
+(function(){
+  if(typeof headers!=='undefined'&&Array.isArray(headers)){
+    headers.push(
+      {t:'"Clavicular\'s Skit Broke TikTok"',c:'CL',s:'🔥 90'},
+      {t:'"Steve Does The IMPOSSIBLE 😱"',c:'SW',s:'🔥 92'},
+      {t:'"PewDiePie Roasts Everyone 💀"',c:'PD',s:'🔥 95'},
+      {t:'"Ninja\'s Fortnite Clutch 🎯"',c:'NJ',s:'⚡ 91'}
+    );
+    if(typeof buildMq==='function'){buildMq('mq1',headers);buildMq('mq2',[...headers].reverse());}
+  }
+})();
+
+/* ═══ UPDATE: Add new gen messages ═══ */
+(function(){
+  if(typeof genMsgs!=='undefined'&&Array.isArray(genMsgs)){
+    genMsgs.push(
+      'Extracting Clavicular comedy skits…',
+      'Processing SteveWillDoIt challenge clips…',
+      'Analyzing PewDiePie commentary moments…',
+      'Finding Ninja Fortnite highlights…'
+    );
+  }
+})();
+
+/* ═══ UPDATE: Year + SEO ═══ */
+(function(){
+  document.querySelectorAll('*').forEach(el=>{
+    if(el.children.length===0&&el.textContent.includes('© 2025')){
+      el.textContent=el.textContent.replace('© 2025','© 2026');
+    }
+  });
+})();
+
+/* ═══ UPDATE: Make all CTA buttons also launch app ═══ */
+(function(){
+  document.querySelectorAll('.btn-hero').forEach(btn=>{
+    if(btn.textContent.includes('Start Free')||btn.textContent.includes('Unlock All')){
+      btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();launchApp()},true);
+    }
+  });
+  document.querySelectorAll('.pbtn,.cr-btn').forEach(btn=>{
+    btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();launchApp()},true);
+  });
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CLIPSPEEDAI PRO — FULL SOFTWARE WITH DASHBOARD
+     All 9 views: Dashboard, Generate, Editor, Captions, 
+     Templates, Export, Analytics, Queue, Projects
+     12 Creators: MrBeast, IShowSpeed, Kai Cenat, PewDiePie,
+     SteveWillDoIt, Ninja, Clavicular, Adin Ross, Neon, Clix, 
+     Marlon, xQc
+     ═══════════════════════════════════════════════════════════ -->
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const CSS_APP = `
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+#app-root *{box-sizing:border-box;margin:0;padding:0}
+#app-root{font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;color:#fafafa}
+#app-root ::-webkit-scrollbar{width:5px;height:5px}#app-root ::-webkit-scrollbar-thumb{background:#333;border-radius:4px}#app-root ::-webkit-scrollbar-track{background:transparent}
+#app-root button,#app-root input,#app-root select,#app-root textarea{font-family:'Sora',sans-serif}
+#app-root .mono{font-family:'IBM Plex Mono',monospace}
+@keyframes appFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes appSlideR{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes appPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes appSpin{to{transform:rotate(360deg)}}
+@keyframes appGlow{0%,100%{box-shadow:0 0 8px rgba(139,92,246,.25)}50%{box-shadow:0 0 28px rgba(139,92,246,.55)}}
+@keyframes appBarGrow{from{width:0}}
+@keyframes appWave{0%,100%{height:18%}50%{height:88%}}
+`;
+
+const V={bg:"#08080b",s1:"#0e0e12",s2:"#141418",s3:"#1a1a1f",s4:"#222228",brd:"#27272a",t:"#fafafa",t2:"#a1a1aa",t3:"#71717a",t4:"#52525b",t5:"#3f3f46",v:"#8b5cf6",v2:"#a78bfa",b:"#3b82f6",b2:"#60a5fa",pk:"#ec4899",pk2:"#f472b6",g:"#22c55e",am:"#f59e0b",r:"#ef4444",cy:"#06b6d4",vbg:"rgba(139,92,246,.08)",vbr:"rgba(139,92,246,.18)"};
+
+const APP_CREATORS={mrbeast:{name:"MrBeast",init:"MB",c:"#3b82f6",niche:"challenges/stunts"},ishowspeed:{name:"IShowSpeed",init:"IS",c:"#ef4444",niche:"reactions/gaming"},speed:{name:"IShowSpeed",init:"IS",c:"#ef4444",niche:"reactions/gaming"},kai:{name:"Kai Cenat",init:"KC",c:"#22c55e",niche:"streams/reactions"},kaicenat:{name:"Kai Cenat",init:"KC",c:"#22c55e",niche:"streams/reactions"},adin:{name:"Adin Ross",init:"AR",c:"#f59e0b",niche:"reactions/streams"},neon:{name:"Neon",init:"NE",c:"#a855f7",niche:"entertainment"},marlon:{name:"Marlon",init:"MA",c:"#ec4899",niche:"comedy/reactions"},clix:{name:"Clix",init:"CX",c:"#6366f1",niche:"gaming/fortnite"},clavicular:{name:"Clavicular",init:"CL",c:"#14b8a6",niche:"comedy/skits"},stevewilldoit:{name:"SteveWillDoIt",init:"SW",c:"#f97316",niche:"stunts/challenges"},steve:{name:"SteveWillDoIt",init:"SW",c:"#f97316",niche:"stunts/challenges"},pewdiepie:{name:"PewDiePie",init:"PD",c:"#dc2626",niche:"gaming/commentary"},pewdie:{name:"PewDiePie",init:"PD",c:"#dc2626",niche:"gaming/commentary"},ninja:{name:"Ninja",init:"NJ",c:"#2563eb",niche:"gaming/fortnite"}};
+const detectCr=u=>{const l=u.toLowerCase();for(const[k,v]of Object.entries(APP_CREATORS))if(l.includes(k))return v;return{name:"Creator",init:"CR",c:"#8b5cf6",niche:"general"}};
+const getVid=u=>u.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1]||null;
+const sC=s=>s>=93?V.pk:s>=85?V.am:V.g;
+const sB=s=>s>=93?"rgba(236,72,153,.1)":s>=85?"rgba(245,158,11,.1)":"rgba(34,197,94,.1)";
+
+const CAPTIONS=[{id:"bold",name:"Bold Pop",desc:"Word-by-word bold",a:"#f59e0b"},{id:"karaoke",name:"Karaoke",desc:"Animated highlighting",a:"#ec4899"},{id:"subtitle",name:"Clean Subtitle",desc:"Professional subs",a:"#3b82f6"},{id:"beast",name:"MrBeast Style",desc:"Large impact text",a:"#22c55e"},{id:"minimal",name:"Minimal",desc:"Subtle lowercase",a:"#a78bfa"},{id:"neon",name:"Neon Glow",desc:"Glowing text",a:"#06b6d4"}];
+const TMPLS=[{id:"classic",name:"Classic 9:16",r:"9:16",i:"📱"},{id:"wide",name:"Wide 16:9",r:"16:9",i:"🖥"},{id:"square",name:"Square 1:1",r:"1:1",i:"⬛"},{id:"split",name:"Split Screen",r:"9:16",i:"📊"},{id:"pip",name:"PiP",r:"9:16",i:"🔲"},{id:"reaction",name:"Reaction",r:"9:16",i:"😱"}];
+const PLATS=[{id:"yt",name:"YouTube Shorts",icon:"▶",c:"#ff0000",max:"60s",r:"9:16"},{id:"tt",name:"TikTok",icon:"♪",c:"#06b6d4",max:"3m",r:"9:16"},{id:"ig",name:"Instagram Reels",icon:"◈",c:"#e1306c",max:"90s",r:"9:16"},{id:"x",name:"Twitter / X",icon:"𝕏",c:"#1da1f2",max:"2:20",r:"16:9"},{id:"kick",name:"Kick",icon:"K",c:"#53fc18",max:"60s",r:"9:16"}];
+const SAMPS=[{name:"MrBeast",url:"https://www.youtube.com/watch?v=o_jCPL_EPXQ"},{name:"IShowSpeed",url:"https://www.youtube.com/watch?v=9IPiHKtJVa0"},{name:"Kai Cenat",url:"https://www.youtube.com/watch?v=I7D1JRSG5Y8"},{name:"PewDiePie",url:"https://www.youtube.com/watch?v=pewdiepie_vid"},{name:"SteveWillDoIt",url:"https://www.youtube.com/watch?v=stevewilldoit_vid"},{name:"Ninja",url:"https://www.youtube.com/watch?v=ninja_gaming"},{name:"Clavicular",url:"https://www.youtube.com/watch?v=clavicular_vid"}];
+const TRENDING=[{name:"MrBeast",init:"MB",c:"#3b82f6",subs:"340M",trend:"+2.4M/wk",hot:99,plat:"YouTube"},{name:"IShowSpeed",init:"IS",c:"#ef4444",subs:"30M",trend:"+890K/wk",hot:98,plat:"YouTube"},{name:"Kai Cenat",init:"KC",c:"#22c55e",subs:"15M",trend:"+620K/wk",hot:97,plat:"Twitch"},{name:"PewDiePie",init:"PD",c:"#dc2626",subs:"111M",trend:"+180K/wk",hot:95,plat:"YouTube"},{name:"Adin Ross",init:"AR",c:"#f59e0b",subs:"8M",trend:"+310K/wk",hot:93,plat:"Kick"},{name:"SteveWillDoIt",init:"SW",c:"#f97316",subs:"12M",trend:"+520K/wk",hot:92,plat:"YouTube"},{name:"Ninja",init:"NJ",c:"#2563eb",subs:"24M",trend:"+150K/wk",hot:91,plat:"YouTube"},{name:"Neon",init:"NE",c:"#a855f7",subs:"5M",trend:"+440K/wk",hot:91,plat:"TikTok"},{name:"Clavicular",init:"CL",c:"#14b8a6",subs:"3.2M",trend:"+680K/wk",hot:90,plat:"TikTok"},{name:"Clix",init:"CX",c:"#6366f1",subs:"6M",trend:"+280K/wk",hot:89,plat:"Twitch"},{name:"Marlon",init:"MA",c:"#ec4899",subs:"4M",trend:"+350K/wk",hot:88,plat:"YouTube"},{name:"xQc",init:"XQ",c:"#06b6d4",subs:"12M",trend:"+200K/wk",hot:86,plat:"Kick"}];
+const FEED=[{t:"1m ago",msg:"Tyler K. exported 18 clips from SteveWillDoIt challenge video",icon:"📤"},{t:"3m ago",msg:"Jordan R. exported 12 clips from MrBeast video",icon:"📤"},{t:"5m ago",msg:"Sofia M. batch-processed 4 Kai Cenat streams",icon:"⚡"},{t:"7m ago",msg:"Alex G. hit 500K views on a Clavicular comedy clip",icon:"🏆"},{t:"9m ago",msg:"Ninja Fortnite clips trending — 3.2M views in 24hrs",icon:"🎮"},{t:"11m ago",msg:"Kyle T. hit 1M views on exported IShowSpeed clip",icon:"🏆"},{t:"14m ago",msg:"PewDiePie commentary clips seeing 2x engagement spike",icon:"📈"},{t:"16m ago",msg:"AI model updated: +3% viral prediction accuracy",icon:"🧠"}];
+const INSIGHTS=[{title:"Peak Posting Time",desc:"Clips posted 6-9 PM EST get 2.3x more views. SteveWillDoIt clips peak at 10 PM weekends.",icon:"⏰",c:V.am},{title:"Caption Winner",desc:"'Bold Pop' drives 34% higher retention. PewDiePie clips perform best with 'Clean Subtitle'.",icon:"💬",c:V.pk},{title:"Trending Niche",desc:"Clavicular comedy skits: 72% TikTok spike. Ninja Fortnite clips surging on YouTube Shorts.",icon:"📈",c:V.g},{title:"Hook Formula",desc:"Question hooks retain 41% more viewers. SteveWillDoIt stunts convert 3x better with shock hooks.",icon:"🎣",c:V.v2}];
+
+function ClipSpeedPro(){
+  const [view,setView]=useState("dashboard");const [url,setUrl]=useState("");const [loading,setLoading]=useState(false);const [progress,setProgress]=useState(0);const [pMsg,setPMsg]=useState("");const [project,setProject]=useState(null);const [activeClip,setActiveClip]=useState(null);const [error,setError]=useState("");const [projects,setProjects]=useState([]);const [captionStyle,setCaptionStyle]=useState("bold");const [template,setTemplate]=useState("classic");const [selPlats,setSelPlats]=useState(["yt","tt","ig"]);const [copied,setCopied]=useState(null);const [showPreview,setShowPreview]=useState(false);const [queue,setQueue]=useState([]);const [sideOpen,setSideOpen]=useState(true);const [filterScore,setFilterScore]=useState(0);const [sortBy,setSortBy]=useState("score");const [liveU,setLiveU]=useState(9847);const [liveC,setLiveC]=useState(2437829);
+  useEffect(()=>{const i1=setInterval(()=>setLiveU(p=>p+(Math.random()>.5?Math.floor(Math.random()*3)+1:0)),3000);const i2=setInterval(()=>setLiveC(p=>p+Math.floor(Math.random()*12)+3),1800);return()=>{clearInterval(i1);clearInterval(i2)}},[]);
+  const msgs=["Downloading metadata…","Extracting waveform…","Detecting scenes…","Running 47-signal analysis…","Identifying peaks…","Generating headers…","Writing hooks…","Optimizing SEO…","Building timeline…","Packaging…"];
+  async function analyze(inputUrl){const u=inputUrl||url;if(!u.trim()){setError("Paste a URL");return}if(!u.includes("youtube.com")&&!u.includes("youtu.be")){setError("Enter a valid YouTube URL");return}setError("");setProject(null);setActiveClip(null);setLoading(true);setProgress(0);setView("generate");let step=0;const iv=setInterval(()=>{step++;setProgress(Math.min(step*9.5,94));setPMsg(msgs[Math.min(step-1,msgs.length-1)])},480);const cr=detectCr(u);const vId=getVid(u);const prompt=`You are ClipSpeedAI's viral clip engine. Analyze this YouTube video and generate 10 viral clips.\nURL: ${u}\nCreator: ${cr.name} (${cr.niche})\nRespond ONLY with valid JSON. No markdown.\n{"videoTitle":"realistic title","duration":"MM:SS","creatorName":"${cr.name}","totalClipsFound":number 80-300,"avgViralScore":number 78-94,"clips":[{"id":1,"startTime":"M:SS","endTime":"M:SS","timestamp":"M:SS - M:SS","duration":"0:XX","viralScore":number 70-99,"engagementScore":number 60-99,"retentionScore":number 65-99,"shareabilityScore":number 55-99,"aiHeader":"5-8 word title","hookLine":"3s hook","clipTitle":"caption with emoji","seoTitle":"SEO title under 65 chars","description":"2-sentence desc","platform":"YouTube Shorts" or "TikTok" or "Instagram Reels","predictedViews":"XXXk-X.XM","hashtags":["#tag1","#tag2","#tag3","#tag4","#tag5"],"captionStyle":"Bold Word-by-Word","whyViral":"why viral","bRollSuggestion":"overlay","trendingAudio":"sound","emotion":"shock or humor or hype or awe or tension or joy","category":"highlight or reaction or funny or dramatic or educational"}]}`;try{const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4096,messages:[{role:"user",content:prompt}]})});const data=await res.json();clearInterval(iv);setProgress(100);setPMsg("Complete ✓");const raw=data.content?.map(b=>b.text||"").join("")||"";const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());parsed.videoId=vId;parsed.creator=cr;parsed.url=u;parsed.createdAt=new Date().toLocaleString();parsed.id=Date.now();setTimeout(()=>{setProject(parsed);setLoading(false);setActiveClip(parsed.clips[0]);setProjects(p=>[parsed,...p].slice(0,20));setView("editor")},400)}catch(e){clearInterval(iv);setLoading(false);setError("Analysis failed — try again.")}}
+  function copy(t,id){navigator.clipboard?.writeText(t);setCopied(id);setTimeout(()=>setCopied(null),1800)}
+  const filtered=project?.clips?.filter(c=>c.viralScore>=filterScore).sort((a,b)=>sortBy==="score"?b.viralScore-a.viralScore:sortBy==="views"?parseInt(b.predictedViews)-parseInt(a.predictedViews):a.id-b.id)||[];
+  const togglePlat=id=>setSelPlats(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+  const addToQueue=clip=>setQueue(q=>[...q,{...clip,platforms:[...selPlats],template,captionStyle,scheduledFor:"Now"}]);
+  const avgScore=project?Math.round(project.clips.reduce((a,c)=>a+c.viralScore,0)/project.clips.length):0;
+  const exportClips=()=>{if(!project)return;const txt=filtered.map((c,i)=>`═ CLIP ${i+1} ═\nScore:${c.viralScore}|${c.timestamp}|${c.duration}\nHeader:${c.aiHeader}\nHook:${c.hookLine}\nCaption:${c.clipTitle}\nSEO:${c.seoTitle}\nPlatform:${c.platform}|Views:${c.predictedViews}\nHashtags:${c.hashtags?.join(" ")}\nWhy:${c.whyViral}\n`).join("\n");const blob=new Blob([txt],{type:"text/plain"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`clipspeed-${Date.now()}.txt`;a.click()};
+  const NAV=[{id:"dashboard",icon:"🏠",label:"Dashboard"},{id:"generate",icon:"⚡",label:"Generate"},{id:"editor",icon:"✂️",label:"Editor",need:true},{id:"captions",icon:"💬",label:"Captions",need:true},{id:"templates",icon:"🎨",label:"Templates",need:true},{id:"export",icon:"🚀",label:"Export",need:true},{id:"analytics",icon:"📊",label:"Analytics",need:true},{id:"queue",icon:"📋",label:"Queue"},{id:"projects",icon:"📂",label:"Projects"}];
+  const weekDays=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];const fakeWeekly=[42,67,38,89,54,71,0];
+  const nb=(act,dis)=>({display:"flex",alignItems:"center",gap:10,padding:sideOpen?"8px 12px":"8px 16px",borderRadius:8,border:"none",background:act?V.vbg:"transparent",color:dis?V.t5:act?V.v2:V.t3,cursor:dis?"not-allowed":"pointer",fontSize:".78rem",fontWeight:act?700:500,transition:".15s",textAlign:"left",width:"100%",opacity:dis?.35:1,position:"relative"});
+
+  return(<div style={{fontFamily:"'Sora',sans-serif"}}><style>{CSS_APP}</style>
+    <div style={{display:"flex",height:"100vh",overflow:"hidden",background:V.bg}}>
+      {/* SIDEBAR */}
+      <aside style={{width:sideOpen?204:58,background:V.s1,borderRight:`1px solid ${V.brd}`,display:"flex",flexDirection:"column",transition:"width .2s",flexShrink:0,zIndex:50}}>
+        <div style={{padding:sideOpen?"14px 16px":"14px",borderBottom:`1px solid ${V.brd}`,display:"flex",alignItems:"center",gap:10,cursor:"pointer",minHeight:56}} onClick={()=>setSideOpen(!sideOpen)}>
+          <div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${V.v},${V.b})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".8rem",fontWeight:900,flexShrink:0,boxShadow:"0 0 14px rgba(139,92,246,.35)"}}>⚡</div>
+          {sideOpen&&<span style={{fontSize:".9rem",fontWeight:800,letterSpacing:"-.02em",whiteSpace:"nowrap"}}>ClipSpeed<span style={{color:V.v2}}>AI</span></span>}
+        </div>
+        <nav style={{flex:1,padding:"8px 6px",display:"flex",flexDirection:"column",gap:1,overflowY:"auto"}}>
+          {NAV.map(n=>{const dis=n.need&&!project;const act=view===n.id;return(<button key={n.id} onClick={()=>!dis&&setView(n.id)} style={nb(act,dis)}><span style={{fontSize:".95rem",width:20,textAlign:"center",flexShrink:0}}>{n.icon}</span>{sideOpen&&<span style={{whiteSpace:"nowrap"}}>{n.label}</span>}{sideOpen&&n.id==="queue"&&queue.length>0&&<span style={{marginLeft:"auto",background:V.v,color:"#fff",fontSize:".55rem",fontWeight:700,padding:"1px 6px",borderRadius:50}}>{queue.length}</span>}{act&&<div style={{position:"absolute",left:0,top:6,bottom:6,width:3,borderRadius:"0 3px 3px 0",background:V.v}}/>}</button>)})}
+        </nav>
+        {sideOpen&&<div style={{padding:"10px 14px",borderTop:`1px solid ${V.brd}`}}>
+          <button onClick={()=>window.backToLanding()} style={{width:"100%",background:V.s3,border:`1px solid ${V.brd}`,borderRadius:7,padding:"7px 10px",color:V.t3,fontSize:".68rem",fontWeight:600,cursor:"pointer",marginBottom:6}}>← Back to Website</button>
+          <div className="mono" style={{fontSize:".58rem",color:V.t5}}>v2.0 Pro · <span style={{color:V.g}}>●</span> Online</div>
+        </div>}
+      </aside>
+      {/* MAIN */}
+      <main style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+        <header style={{height:46,background:V.s1,borderBottom:`1px solid ${V.brd}`,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",flexShrink:0}}>
+          <span style={{fontSize:".75rem",fontWeight:700,color:V.t2}}>{NAV.find(n=>n.id===view)?.icon} {NAV.find(n=>n.id===view)?.label}</span>
+          <div style={{display:"flex",alignItems:"center",gap:8}}><span className="mono" style={{fontSize:".65rem",color:V.g}}>● {liveU.toLocaleString()} live</span>{project&&<button onClick={exportClips} style={{background:V.s3,border:`1px solid ${V.brd}`,borderRadius:6,padding:"4px 10px",color:V.t3,fontSize:".68rem",fontWeight:600,cursor:"pointer"}}>📥 Export</button>}</div>
+        </header>
+        <div style={{flex:1,overflow:"auto"}}>
+
+          {/* ═══ DASHBOARD ═══ */}
+          {view==="dashboard"&&(<div style={{padding:"24px 20px",maxWidth:1200,margin:"0 auto"}}>
+            <div style={{background:`linear-gradient(135deg,rgba(139,92,246,.1),rgba(59,130,246,.06),rgba(236,72,153,.05))`,border:`1px solid ${V.vbr}`,borderRadius:18,padding:"28px 32px",marginBottom:20,position:"relative",overflow:"hidden",animation:"appFadeIn .4s ease"}}>
+              <div style={{position:"relative",zIndex:1,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:16}}>
+                <div><h1 style={{fontSize:"clamp(1.4rem,3vw,1.9rem)",fontWeight:800,letterSpacing:"-.03em",lineHeight:1.15,marginBottom:8}}>Welcome back<span style={{color:V.v2}}>.</span><br/><span style={{color:V.t3,fontSize:".65em",fontWeight:600}}>What are we clipping today?</span></h1>
+                  <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}><button onClick={()=>setView("generate")} style={{background:`linear-gradient(135deg,${V.v},${V.b})`,border:"none",borderRadius:9,padding:"10px 22px",color:"#fff",fontWeight:700,fontSize:".82rem",cursor:"pointer",boxShadow:"0 4px 20px rgba(139,92,246,.25)"}}>⚡ Generate Clips</button>{projects.length>0&&<button onClick={()=>{setProject(projects[0]);setActiveClip(projects[0].clips[0]);setView("editor")}} style={{background:V.s3,border:`1px solid ${V.brd}`,borderRadius:9,padding:"10px 22px",color:V.t2,fontWeight:700,fontSize:".82rem",cursor:"pointer"}}>✂️ Continue Last</button>}</div>
+                </div>
+                <div style={{background:"rgba(0,0,0,.3)",border:`1px solid ${V.brd}`,borderRadius:12,padding:14,minWidth:260}}><div style={{fontSize:".62rem",fontWeight:700,color:V.t4,letterSpacing:".06em",textTransform:"uppercase",marginBottom:8}}>Quick Clip</div><div style={{display:"flex",gap:6}}><input value={url} onChange={e=>{setUrl(e.target.value);setError("")}} onKeyDown={e=>e.key==="Enter"&&analyze()} placeholder="Paste YouTube URL…" style={{flex:1,background:V.s2,border:`1px solid ${V.brd}`,borderRadius:7,padding:"8px 10px",color:V.t,fontSize:".78rem",outline:"none",minWidth:0}}/><button onClick={()=>analyze()} style={{background:V.v,border:"none",borderRadius:7,padding:"8px 14px",color:"#fff",fontWeight:700,fontSize:".75rem",cursor:"pointer",flexShrink:0}}>Go →</button></div>{error&&<div style={{color:V.r,fontSize:".65rem",marginTop:4}}>{error}</div>}</div>
+              </div>
+            </div>
+            {/* Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10,marginBottom:20}}>{[{l:"Clips Generated",v:liveC.toLocaleString(),c:V.v2,sub:"+12,847 today"},{l:"Active Creators",v:liveU.toLocaleString(),c:V.g,sub:"+234 today"},{l:"Viral Rate",v:"94.2%",c:V.pk,sub:"+1.3% vs last week"},{l:"Your Clips",v:projects.reduce((a,p)=>a+p.clips.length,0).toString(),c:V.am,sub:`${projects.length} projects`}].map((s,i)=>(<div key={i} style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:12,padding:"14px 16px"}}><div style={{fontSize:".58rem",fontWeight:600,color:V.t4,letterSpacing:".05em",textTransform:"uppercase",marginBottom:5}}>{s.l}</div><div className="mono" style={{fontSize:"1.4rem",fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div><div style={{fontSize:".58rem",color:V.t5,marginTop:3}}>{s.sub}</div></div>))}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 340px",gap:16}}>
+              <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                {/* Weekly */}
+                <div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:18}}><div style={{fontSize:".85rem",fontWeight:700,marginBottom:14}}>This Week's Activity</div><div style={{display:"flex",alignItems:"end",gap:8,height:100}}>{fakeWeekly.map((v,i)=>{const max=Math.max(...fakeWeekly,1);return(<div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><span className="mono" style={{fontSize:".58rem",color:v?V.t3:V.t5}}>{v||"—"}</span><div style={{width:"100%",borderRadius:5,background:i===6?`linear-gradient(180deg,${V.v},${V.b})`:v>60?`linear-gradient(180deg,${V.g},rgba(34,197,94,.3))`:V.s4,height:`${Math.max((v/max)*100,4)}%`,animation:`appBarGrow .5s ease ${i*.08}s both`}}/><span style={{fontSize:".55rem",color:i===6?V.v2:V.t5,fontWeight:i===6?700:500}}>{weekDays[i]}</span></div>)})}</div></div>
+                {/* Trending */}
+                <div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:18}}><div style={{fontSize:".85rem",fontWeight:700,marginBottom:14}}>🔥 Trending Creators</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7}}>{TRENDING.map((cr,i)=>(<div key={i} onClick={()=>{setUrl(`https://youtube.com/@${cr.name}`);setView("generate")}} style={{background:V.s3,border:`1px solid ${V.brd}`,borderRadius:9,padding:"8px 10px",cursor:"pointer",transition:".2s",display:"flex",alignItems:"center",gap:8,position:"relative",overflow:"hidden"}}>{i<3&&<div style={{position:"absolute",top:0,right:0,fontSize:".45rem",fontWeight:700,padding:"1px 6px",borderRadius:"0 8px 0 5px",background:i===0?"linear-gradient(135deg,#f59e0b,#ef4444)":i===1?"linear-gradient(135deg,#a1a1aa,#71717a)":"linear-gradient(135deg,#b45309,#a16207)",color:"#fff"}}>{["🥇#1","🥈#2","🥉#3"][i]}</div>}<div style={{width:32,height:32,borderRadius:8,background:`linear-gradient(135deg,${cr.c},${cr.c}88)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".6rem",fontWeight:900,color:"#fff",flexShrink:0}}>{cr.init}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:".7rem",fontWeight:700}}>{cr.name} <span className="mono" style={{fontSize:".48rem",color:sC(cr.hot),background:sB(cr.hot),padding:"1px 4px",borderRadius:3}}>{cr.hot}</span></div><div style={{fontSize:".55rem",color:V.t4}}>{cr.subs} · <span style={{color:V.g}}>{cr.trend}</span></div></div></div>))}</div></div>
+                {/* Insights */}
+                <div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:18}}><div style={{fontSize:".85rem",fontWeight:700,marginBottom:14}}>🧠 AI Insights</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>{INSIGHTS.map((ins,i)=>(<div key={i} style={{background:V.s3,border:`1px solid ${V.brd}`,borderRadius:9,padding:"11px 13px"}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}><span>{ins.icon}</span><span style={{fontSize:".75rem",fontWeight:700,color:ins.c}}>{ins.title}</span></div><div style={{fontSize:".68rem",color:V.t3,lineHeight:1.5}}>{ins.desc}</div></div>))}</div></div>
+              </div>
+              {/* Right col */}
+              <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                <div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:18}}><div style={{fontSize:".78rem",fontWeight:700,marginBottom:10}}>Quick Actions</div>{[{l:"Generate",icon:"⚡",v:"generate"},{l:"Queue",icon:"📋",v:"queue"},{l:"Templates",icon:"🎨",v:"templates",n:true},{l:"Analytics",icon:"📊",v:"analytics",n:true}].map((a,i)=>(<button key={i} onClick={()=>!(a.n&&!project)&&setView(a.v)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 11px",borderRadius:8,border:`1px solid ${V.brd}`,background:V.s3,cursor:a.n&&!project?"not-allowed":"pointer",opacity:a.n&&!project?.35:1,width:"100%",textAlign:"left",marginBottom:5,fontSize:".75rem",fontWeight:600,color:V.t2}}>{a.icon} {a.l}<span style={{marginLeft:"auto",color:V.t5}}>→</span></button>))}</div>
+                <div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:18}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:12}}><span style={{width:6,height:6,borderRadius:"50%",background:V.g,boxShadow:`0 0 6px ${V.g}`,animation:"appPulse 1.4s infinite"}}/><span style={{fontSize:".78rem",fontWeight:700}}>Live Feed</span></div>{FEED.slice(0,6).map((a,i)=>(<div key={i} style={{display:"flex",gap:8,padding:"7px 0",borderBottom:i<5?`1px solid ${V.brd}`:"none"}}><span style={{fontSize:".85rem",flexShrink:0}}>{a.icon}</span><div><div style={{fontSize:".68rem",color:V.t3,lineHeight:1.4}}>{a.msg}</div><div className="mono" style={{fontSize:".55rem",color:V.t5,marginTop:2}}>{a.t}</div></div></div>))}</div>
+                <div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:18}}><div style={{fontSize:".78rem",fontWeight:700,marginBottom:10}}>📂 Recent Projects</div>{projects.length===0?<div style={{textAlign:"center",padding:16,color:V.t5,fontSize:".72rem"}}>📂 No projects yet</div>:projects.slice(0,3).map((p,i)=>(<div key={i} onClick={()=>{setProject(p);setActiveClip(p.clips[0]);setView("editor")}} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",cursor:"pointer",borderBottom:i<2?`1px solid ${V.brd}`:"none"}}><div style={{width:16,height:16,borderRadius:"50%",background:p.creator?.c||V.v,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".4rem",fontWeight:900,color:"#fff"}}>{p.creator?.init}</div><div style={{flex:1}}><div style={{fontSize:".7rem",fontWeight:700}}>{p.creatorName}</div></div><span className="mono" style={{fontSize:".58rem",color:V.v2}}>{p.clips.length} clips</span></div>))}</div>
+              </div>
+            </div>
+          </div>)}
+
+          {/* ═══ GENERATE ═══ */}
+          {view==="generate"&&(<div style={{maxWidth:700,margin:"0 auto",padding:"40px 20px"}}><div style={{textAlign:"center",animation:"appFadeIn .4s ease"}}><div style={{display:"inline-flex",alignItems:"center",gap:6,background:V.vbg,border:`1px solid ${V.vbr}`,borderRadius:50,padding:"5px 16px",fontSize:".68rem",fontWeight:700,color:V.v2,marginBottom:20}}><span style={{width:5,height:5,borderRadius:"50%",background:V.g,animation:"appPulse 1.4s infinite"}}/>AI Ready</div><h2 style={{fontSize:"clamp(1.5rem,3.5vw,2.2rem)",fontWeight:800,letterSpacing:"-.04em",lineHeight:1.1,marginBottom:10}}>Paste a video.<br/><span style={{background:`linear-gradient(135deg,${V.v2},${V.b2},${V.pk2})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>AI handles everything.</span></h2><div style={{display:"flex",gap:8,maxWidth:560,margin:"0 auto",flexWrap:"wrap"}}><div style={{flex:1,minWidth:200,position:"relative"}}><input value={url} onChange={e=>{setUrl(e.target.value);setError("")}} onKeyDown={e=>e.key==="Enter"&&analyze()} placeholder="Paste YouTube URL…" style={{width:"100%",background:V.s2,border:`1.5px solid ${error?V.r:V.brd}`,borderRadius:10,padding:"12px 16px 12px 36px",color:V.t,fontSize:".85rem",outline:"none"}}/><span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:".85rem",opacity:.3}}>🔗</span></div><button onClick={()=>analyze()} disabled={loading} style={{background:loading?"rgba(139,92,246,.3)":`linear-gradient(135deg,${V.v},${V.b})`,border:"none",borderRadius:10,padding:"12px 22px",color:"#fff",fontWeight:800,fontSize:".85rem",cursor:loading?"not-allowed":"pointer",boxShadow:loading?"none":"0 4px 20px rgba(139,92,246,.25)"}}>{loading?"Analyzing…":"⚡ Generate"}</button></div>{error&&<div style={{color:V.r,fontSize:".75rem",marginTop:8}}>{error}</div>}<div style={{display:"flex",gap:5,justifyContent:"center",flexWrap:"wrap",marginTop:12}}><span style={{fontSize:".65rem",color:V.t5}}>Try:</span>{SAMPS.slice(0,5).map((s,i)=><button key={i} onClick={()=>{setUrl(s.url);setError("")}} style={{background:V.s3,border:`1px solid ${V.brd}`,borderRadius:50,padding:"3px 11px",color:V.v2,fontSize:".65rem",fontWeight:700,cursor:"pointer"}}>{s.name}</button>)}</div></div>{loading&&<div style={{marginTop:28,background:V.s2,border:`1px solid ${V.brd}`,borderRadius:14,padding:20,animation:"appFadeIn .3s ease"}}><div style={{display:"flex",alignItems:"center",gap:12}}><div style={{width:34,height:34,borderRadius:8,background:`linear-gradient(135deg,${V.v},${V.b})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".85rem",animation:"appGlow 2s infinite",flexShrink:0}}>⚡</div><div style={{flex:1}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:".72rem",color:V.v2,fontWeight:700}}>{pMsg}</span><span className="mono" style={{fontSize:".68rem",color:V.t4}}>{progress}%</span></div><div style={{height:4,background:V.s4,borderRadius:50,overflow:"hidden"}}><div style={{height:"100%",width:`${progress}%`,background:`linear-gradient(90deg,${V.v},${V.b},${V.pk})`,borderRadius:50,transition:"width .4s ease"}}/></div></div></div></div>}</div>)}
+
+          {/* ═══ EDITOR ═══ */}
+          {view==="editor"&&project&&(<div style={{display:"flex",height:"100%",overflow:"hidden"}}><div style={{width:260,background:V.s1,borderRight:`1px solid ${V.brd}`,display:"flex",flexDirection:"column",flexShrink:0}}><div style={{padding:"10px 12px",borderBottom:`1px solid ${V.brd}`}}><div style={{display:"flex",gap:3,marginBottom:6}}>{[{l:"All",v:0},{l:"85+",v:85},{l:"90+",v:90},{l:"95+",v:95}].map(f=><button key={f.v} onClick={()=>setFilterScore(f.v)} style={{flex:1,padding:"3px 0",borderRadius:4,border:"none",fontSize:".58rem",fontWeight:700,cursor:"pointer",background:filterScore===f.v?V.vbg:V.s3,color:filterScore===f.v?V.v2:V.t4}}>{f.l}</button>)}</div><select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{width:"100%",background:V.s3,border:`1px solid ${V.brd}`,borderRadius:5,padding:"4px 7px",color:V.t3,fontSize:".65rem",outline:"none"}}><option value="score">Score</option><option value="order">Timeline</option><option value="views">Views</option></select></div><div style={{flex:1,overflowY:"auto",padding:5}}>{filtered.map((c,i)=>(<div key={c.id} onClick={()=>setActiveClip(c)} style={{padding:"9px 10px",borderRadius:8,marginBottom:3,cursor:"pointer",position:"relative",background:activeClip?.id===c.id?V.vbg:"transparent",border:`1px solid ${activeClip?.id===c.id?V.vbr:"transparent"}`}}><div style={{position:"absolute",left:0,top:7,bottom:7,width:3,borderRadius:3,background:sC(c.viralScore)}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}><span style={{fontSize:".52rem",padding:"1px 5px",borderRadius:3,fontWeight:700,background:sB(c.viralScore),color:sC(c.viralScore)}}>{c.emotion}</span><span className="mono" style={{fontSize:".62rem",fontWeight:800,color:sC(c.viralScore)}}>{c.viralScore}</span></div><div style={{fontSize:".72rem",fontWeight:700,lineHeight:1.25,color:activeClip?.id===c.id?V.t:V.t3,marginBottom:2}}>{c.clipTitle}</div><div className="mono" style={{fontSize:".55rem",color:V.t5}}>{c.timestamp} · {c.duration}</div></div>))}</div></div>{activeClip&&(<div style={{flex:1,overflow:"auto",padding:18}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,animation:"appFadeIn .3s ease"}}><div style={{background:"rgba(139,92,246,.05)",border:"1px solid rgba(139,92,246,.12)",borderRadius:11,padding:"12px 14px"}}><div style={{fontSize:".55rem",fontWeight:700,color:V.v,letterSpacing:".07em",textTransform:"uppercase",marginBottom:7}}>⚡ AI VIRAL HEADER</div><div style={{fontSize:"1rem",fontWeight:900,lineHeight:1.3,marginBottom:6}}>{activeClip.aiHeader}</div><button onClick={()=>copy(activeClip.aiHeader,"h")} style={{background:`${V.v}10`,border:`1px solid ${V.v}22`,borderRadius:4,padding:"3px 9px",color:V.v2,fontSize:".6rem",fontWeight:700,cursor:"pointer"}}>{copied==="h"?"✅ Copied":"📋 Copy"}</button></div><div style={{background:"rgba(236,72,153,.04)",border:"1px solid rgba(236,72,153,.1)",borderRadius:11,padding:"12px 14px"}}><div style={{fontSize:".55rem",fontWeight:700,color:V.pk,letterSpacing:".07em",textTransform:"uppercase",marginBottom:7}}>🎣 HOOK LINE</div><div style={{fontSize:".85rem",fontWeight:700,lineHeight:1.5,fontStyle:"italic",color:"#fce7f3"}}>"{activeClip.hookLine}"</div><button onClick={()=>copy(activeClip.hookLine,"hk")} style={{marginTop:6,background:`${V.pk}10`,border:`1px solid ${V.pk}22`,borderRadius:4,padding:"3px 9px",color:V.pk,fontSize:".6rem",fontWeight:700,cursor:"pointer"}}>{copied==="hk"?"✅ Copied":"📋 Copy"}</button></div><div style={{background:"rgba(34,197,94,.04)",border:"1px solid rgba(34,197,94,.1)",borderRadius:11,padding:"12px 14px"}}><div style={{fontSize:".55rem",fontWeight:700,color:V.g,letterSpacing:".07em",textTransform:"uppercase",marginBottom:7}}>🔍 SEO TITLE</div><div style={{fontSize:".78rem",color:V.t2,lineHeight:1.4}}>{activeClip.seoTitle}</div><div style={{fontSize:".68rem",color:V.t4,marginTop:5,lineHeight:1.5}}>{activeClip.description}</div></div><div style={{background:"rgba(245,158,11,.04)",border:"1px solid rgba(245,158,11,.1)",borderRadius:11,padding:"12px 14px"}}><div style={{fontSize:".55rem",fontWeight:700,color:V.am,letterSpacing:".07em",textTransform:"uppercase",marginBottom:7}}>🧠 VIRAL ANALYSIS</div><div style={{fontSize:".76rem",color:V.t3,lineHeight:1.5}}>{activeClip.whyViral}</div></div></div><div style={{display:"flex",gap:10,marginTop:10,flexWrap:"wrap",alignItems:"center"}}><div style={{flex:1,minWidth:180}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{activeClip.hashtags?.map((h,i)=><span key={i} style={{background:V.vbg,border:`1px solid ${V.vbr}`,borderRadius:50,padding:"2px 8px",fontSize:".65rem",color:V.v2,fontWeight:600}}>{h}</span>)}</div></div><button onClick={()=>addToQueue(activeClip)} style={{background:`linear-gradient(135deg,${V.v},${V.b})`,border:"none",borderRadius:9,padding:"11px 20px",color:"#fff",fontWeight:800,fontSize:".82rem",cursor:"pointer",boxShadow:"0 4px 16px rgba(139,92,246,.2)",whiteSpace:"nowrap"}}>📋 Add to Queue</button></div></div>)}</div>)}
+
+          {/* ═══ CAPTIONS ═══ */}
+          {view==="captions"&&project&&activeClip&&(<div style={{padding:18,animation:"appFadeIn .3s ease"}}><div style={{fontSize:".65rem",fontWeight:700,color:V.t4,letterSpacing:".06em",textTransform:"uppercase",marginBottom:14}}>Caption Style</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10}}>{CAPTIONS.map(s=>(<div key={s.id} onClick={()=>setCaptionStyle(s.id)} style={{background:captionStyle===s.id?V.vbg:V.s2,border:`1px solid ${captionStyle===s.id?V.vbr:V.brd}`,borderRadius:12,overflow:"hidden",cursor:"pointer"}}><div style={{height:100,background:"linear-gradient(135deg,#0a0a0f,#12121a)",display:"flex",alignItems:"center",justifyContent:"center",padding:14}}><div style={{textAlign:"center",fontSize:".9rem",fontWeight:700,color:"#fff"}}>{activeClip.hookLine?.split(" ").slice(0,4).map((w,i)=><span key={i} style={{color:i===2?s.a:"#fff"}}>{w} </span>)}</div></div><div style={{padding:"10px 12px"}}><div style={{fontSize:".78rem",fontWeight:700}}>{s.name}</div><div style={{fontSize:".65rem",color:V.t4,marginTop:2}}>{s.desc}</div></div></div>))}</div></div>)}
+
+          {/* ═══ TEMPLATES ═══ */}
+          {view==="templates"&&project&&(<div style={{padding:18,animation:"appFadeIn .3s ease"}}><div style={{fontSize:".65rem",fontWeight:700,color:V.t4,letterSpacing:".06em",textTransform:"uppercase",marginBottom:14}}>Layout Template</div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10}}>{TMPLS.map(t=>(<div key={t.id} onClick={()=>setTemplate(t.id)} style={{background:template===t.id?V.vbg:V.s2,border:`1px solid ${template===t.id?V.vbr:V.brd}`,borderRadius:12,padding:16,cursor:"pointer",textAlign:"center"}}><div style={{fontSize:"2.2rem",marginBottom:8}}>{t.i}</div><div style={{fontSize:".82rem",fontWeight:700}}>{t.name}</div><div className="mono" style={{fontSize:".65rem",color:V.v2,marginTop:2}}>{t.r}</div></div>))}</div></div>)}
+
+          {/* ═══ EXPORT ═══ */}
+          {view==="export"&&project&&activeClip&&(<div style={{padding:18,maxWidth:780,animation:"appFadeIn .3s ease"}}><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:7,marginBottom:16}}>{PLATS.map(p=>(<div key={p.id} onClick={()=>togglePlat(p.id)} style={{background:selPlats.includes(p.id)?`${p.c}12`:V.s2,border:`1px solid ${selPlats.includes(p.id)?`${p.c}40`:V.brd}`,borderRadius:9,padding:10,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}><span style={{width:20,height:20,borderRadius:5,background:p.c,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".6rem",color:"#fff",fontWeight:900}}>{p.icon}</span><span style={{fontSize:".75rem",fontWeight:700}}>{p.name}</span></div><div style={{fontSize:".58rem",color:V.t5}}>Max: {p.max}</div></div>))}</div><div style={{textAlign:"center"}}><button onClick={()=>addToQueue(activeClip)} style={{background:`linear-gradient(135deg,${V.v},${V.b})`,border:"none",borderRadius:8,padding:"10px 22px",color:"#fff",fontWeight:800,fontSize:".82rem",cursor:"pointer",boxShadow:"0 4px 16px rgba(139,92,246,.25)"}}>🚀 Export & Publish</button><button onClick={exportClips} style={{marginLeft:8,background:V.s3,border:`1px solid ${V.brd}`,borderRadius:8,padding:"10px 22px",color:V.t3,fontWeight:700,fontSize:".82rem",cursor:"pointer"}}>📥 Download .txt</button></div></div>)}
+
+          {/* ═══ ANALYTICS ═══ */}
+          {view==="analytics"&&project&&(<div style={{padding:18,animation:"appFadeIn .3s ease"}}><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:8,marginBottom:16}}>{[{l:"Total Clips",v:project.totalClipsFound,c:V.v2},{l:"Avg Score",v:avgScore,c:sC(avgScore)},{l:"Top Score",v:Math.max(...project.clips.map(c=>c.viralScore)),c:V.pk},{l:"Clips Shown",v:project.clips.length,c:V.b2}].map((s,i)=>(<div key={i} style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:10,padding:"12px 14px"}}><div className="mono" style={{fontSize:"1.3rem",fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div><div style={{fontSize:".6rem",color:V.t5,marginTop:3}}>{s.l}</div></div>))}</div><div style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:12,padding:14}}><div style={{fontSize:".65rem",fontWeight:700,color:V.t4,letterSpacing:".06em",textTransform:"uppercase",marginBottom:12}}>Score Distribution</div><div style={{display:"flex",alignItems:"end",gap:4,height:110}}>{project.clips.map((c,i)=><div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><span className="mono" style={{fontSize:".5rem",color:sC(c.viralScore),fontWeight:700}}>{c.viralScore}</span><div style={{width:"100%",height:`${c.viralScore}%`,background:`linear-gradient(180deg,${sC(c.viralScore)},${sC(c.viralScore)}33)`,borderRadius:"3px 3px 0 0",cursor:"pointer",animation:`appBarGrow .5s ease ${i*.04}s both`}} onClick={()=>{setActiveClip(c);setView("editor")}}/></div>)}</div></div></div>)}
+
+          {/* ═══ QUEUE ═══ */}
+          {view==="queue"&&(<div style={{padding:18,animation:"appFadeIn .3s ease"}}><div style={{fontSize:".65rem",fontWeight:700,color:V.t4,letterSpacing:".06em",textTransform:"uppercase",marginBottom:14}}>Export Queue ({queue.length})</div>{queue.length===0?<div style={{textAlign:"center",padding:"50px 20px",color:V.t5}}><div style={{fontSize:"2.2rem",marginBottom:10}}>📋</div><div style={{fontSize:".85rem",fontWeight:600,color:V.t4}}>Queue is empty</div></div>:<div style={{display:"flex",flexDirection:"column",gap:6}}>{queue.map((q,i)=><div key={i} style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:9,padding:"10px 14px",display:"flex",alignItems:"center",gap:10}}><div style={{flex:1}}><div style={{fontSize:".78rem",fontWeight:700}}>{q.clipTitle}</div></div><span className="mono" style={{fontSize:".68rem",fontWeight:800,color:sC(q.viralScore)}}>{q.viralScore}</span><button onClick={()=>setQueue(queue.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:V.t5,cursor:"pointer",fontSize:".85rem"}}>✕</button></div>)}<button onClick={()=>setQueue([])} style={{marginTop:6,background:`linear-gradient(135deg,${V.v},${V.b})`,border:"none",borderRadius:9,padding:11,color:"#fff",fontWeight:800,cursor:"pointer"}}>🚀 Export All ({queue.length})</button></div>}</div>)}
+
+          {/* ═══ PROJECTS ═══ */}
+          {view==="projects"&&(<div style={{padding:18,animation:"appFadeIn .3s ease"}}><div style={{fontSize:".65rem",fontWeight:700,color:V.t4,letterSpacing:".06em",textTransform:"uppercase",marginBottom:14}}>Projects ({projects.length})</div>{projects.length===0?<div style={{textAlign:"center",padding:"50px 20px",color:V.t5}}>📂 No projects yet</div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10}}>{projects.map((p,i)=><div key={i} onClick={()=>{setProject(p);setActiveClip(p.clips[0]);setView("editor")}} style={{background:V.s2,border:`1px solid ${V.brd}`,borderRadius:12,overflow:"hidden",cursor:"pointer"}}>{p.videoId&&<div style={{height:80,overflow:"hidden",position:"relative"}}><img src={`https://img.youtube.com/vi/${p.videoId}/hqdefault.jpg`} style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/></div>}<div style={{padding:"10px 12px"}}><div style={{fontSize:".72rem",fontWeight:700}}>{p.creatorName}</div><div style={{fontSize:".65rem",color:V.t4}}>{p.videoTitle?.slice(0,50)}…</div><div className="mono" style={{fontSize:".55rem",color:V.t5,marginTop:4}}>{p.createdAt}</div></div></div>)}</div>}</div>)}
+
+          {/* Needs project */}
+          {["editor","captions","templates","export","analytics"].includes(view)&&!project&&(<div style={{textAlign:"center",padding:"70px 20px",animation:"appFadeIn .3s ease"}}><div style={{fontSize:"2.5rem",marginBottom:12}}>⚡</div><div style={{fontSize:".9rem",fontWeight:700,color:V.t3}}>No active project</div><div style={{fontSize:".78rem",color:V.t5,marginTop:4,marginBottom:18}}>Generate clips first</div><button onClick={()=>setView("generate")} style={{background:`linear-gradient(135deg,${V.v},${V.b})`,border:"none",borderRadius:8,padding:"9px 22px",color:"#fff",fontWeight:700,cursor:"pointer"}}>⚡ Generate</button></div>)}
+        </div>
+      </main>
+    </div>
+  </div>);
+}
+
+// Mount
+const appRoot = document.getElementById('app-root');
+if (appRoot) {
+  const root = ReactDOM.createRoot(appRoot);
+  root.render(<ClipSpeedPro />);
+}
+</script>
