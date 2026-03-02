@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y \
 
 # Install yt-dlp (downloads YouTube videos)
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
-  && chmod a+rx /usr/local/bin/yt-dlp
+    && chmod a+x /usr/local/bin/yt-dlp \
+    && ln -sf /usr/local/bin/node /usr/local/bin/nodejs
 
+ENV YT_DLP_JS_RUNTIME=node
 # Create app directory
 WORKDIR /app
 
