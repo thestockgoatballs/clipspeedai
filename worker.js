@@ -1,12 +1,12 @@
 const { Worker } = require('bullmq');
 const IORedis = require('ioredis');
-const { supabase } = require('../lib/supabase');
-const { downloadVideo, cleanupVideo } = require('../pipeline/download');
-const { transcribeVideo } = require('../pipeline/transcribe');
-const { analyzeTranscript } = require('../pipeline/analyze');
-const { cutClips } = require('../pipeline/cut');
-const { addCaptions, addWatermark } = require('../pipeline/captions');
-const { uploadClips } = require('../pipeline/upload');
+const { supabase } = require('./supabase');
+const { downloadVideo, cleanupVideo } = require('./download');
+const { transcribeVideo } = require('./transcribe');
+const { analyzeTranscript } = require('./analyze');
+const { cutClips } = require('./cut');
+const { addCaptions, addWatermark } = require('./captions');
+const { uploadClips } = require('./upload');
 
 const redis = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 
@@ -28,9 +28,7 @@ const worker = new Worker('video-processing', async (job) => {
   let videoMeta = null;
 
   try {
-    // ═══════════════════════════════════════
     // STEP 1: Download the video
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'downloading');
     job.updateProgress(10);
 
@@ -45,9 +43,7 @@ const worker = new Worker('video-processing', async (job) => {
 
     console.log(`📥 Downloaded: ${videoMeta.title} (${videoMeta.durationFormatted})`);
 
-    // ═══════════════════════════════════════
     // STEP 2: Transcribe audio
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'transcribing');
     job.updateProgress(25);
 
@@ -59,9 +55,7 @@ const worker = new Worker('video-processing', async (job) => {
 
     console.log(`🎤 Transcribed: ${transcript.segments.length} segments, ${transcript.fullText.length} chars`);
 
-    // ═══════════════════════════════════════
     // STEP 3: AI Analysis (find viral moments)
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'analyzing');
     job.updateProgress(45);
 
@@ -76,9 +70,7 @@ const worker = new Worker('video-processing', async (job) => {
 
     console.log(`🧠 Analysis: ${analysis.clips.length} viral moments found`);
 
-    // ═══════════════════════════════════════
     // STEP 4: Cut clips with FFmpeg
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'cutting');
     job.updateProgress(60);
 
@@ -86,16 +78,13 @@ const worker = new Worker('video-processing', async (job) => {
 
     console.log(`✂️ Cut: ${cutResults.filter(r => r.success).length} clips`);
 
-    // ═══════════════════════════════════════
     // STEP 5: Add captions to clips
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'captioning');
     job.updateProgress(75);
 
     for (const result of cutResults) {
       if (!result.success) continue;
 
-      // Find transcript words that fall within this clip's time range
       const clip = analysis.clips.find(c => c.id === result.clipId);
       if (!clip) continue;
 
@@ -106,7 +95,7 @@ const worker = new Worker('video-processing', async (job) => {
             if (w.start >= clip.startSeconds && w.end <= clip.endSeconds) {
               clipWords.push({
                 word: w.word,
-                start: w.start - clip.startSeconds, // relative to clip start
+                start: w.start - clip.startSeconds,
                 end: w.end - clip.startSeconds,
               });
             }
@@ -122,9 +111,7 @@ const worker = new Worker('video-processing', async (job) => {
       }
     }
 
-    // ═══════════════════════════════════════
     // STEP 5.5: Add watermark for free tier users
-    // ═══════════════════════════════════════
     const { data: userProfile } = await supabase
       .from('profiles')
       .select('plan')
@@ -143,17 +130,13 @@ const worker = new Worker('video-processing', async (job) => {
       }
     }
 
-    // ═══════════════════════════════════════
     // STEP 6: Upload to R2 storage
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'uploading');
     job.updateProgress(88);
 
     const uploadResults = await uploadClips(cutResults, projectId);
 
-    // ═══════════════════════════════════════
     // STEP 7: Save clips to database
-    // ═══════════════════════════════════════
     const clipRecords = analysis.clips.map((clip, i) => {
       const upload = uploadResults.find(u => u.clipId === clip.id);
       return {
@@ -189,9 +172,7 @@ const worker = new Worker('video-processing', async (job) => {
 
     await supabase.from('clips').insert(clipRecords);
 
-    // ═══════════════════════════════════════
     // DONE!
-    // ═══════════════════════════════════════
     await updateProjectStatus(projectId, 'complete');
     job.updateProgress(100);
 
@@ -222,10 +203,10 @@ const worker = new Worker('video-processing', async (job) => {
 
 }, {
   connection: redis,
-  concurrency: 2, // Process 2 videos at a time
+  concurrency: 2,
   limiter: {
     max: 10,
-    duration: 60000, // Max 10 jobs per minute
+    duration: 60000,
   },
 });
 
