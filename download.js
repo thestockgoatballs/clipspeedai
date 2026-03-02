@@ -33,8 +33,8 @@ async function downloadVideo(videoUrl) {
     // --max-filesize 500M = safety limit
     const cmd = [
       'yt-dlp',
-      '-f', '"bv*[height<=1080]+ba/b[height<=1080]"',
-      '--merge-output-format', 'mp4',
+      '--extractor-args', '"youtube:player_client=web,mediaconnect"',
+      '-f', '"bv*[height<=1080]+ba/b[height<=1080]"',      '--merge-output-format', 'mp4',
       '--write-info-json',
       '--no-playlist',
       '--max-filesize', '500M',
