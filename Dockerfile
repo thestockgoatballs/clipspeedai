@@ -10,13 +10,12 @@ RUN apt-get update && apt-get install -y \
 
 # Install yt-dlp (downloads YouTube videos)
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
-    && chmod a+x /usr/local/bin/yt-dlp
+    && chmod a+x /usr/local/bin/yt-dlp \
+    && ln -sf /usr/local/bin/node /usr/bin/nodejs \
+    && ln -sf /usr/local/bin/node /usr/local/bin/nodejs
 
-# Tell yt-dlp where Node.js is
-RUN echo '[generic]' > /etc/yt-dlp.conf && \
-    yt-dlp --update-to stable 2>/dev/null || true
-ENV PATH="/usr/local/bin:/usr/bin:/usr/sbin:$PATH"
-RUN ln -sf "$(which node)" /usr/bin/nodejs
+# Verify node is findable as nodejs
+RUN yt-dlp --version && node --version && nodejs --version
 
 # Create app directory
 WORKDIR /app
