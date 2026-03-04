@@ -4,7 +4,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { Queue } = require('bullmq');
 const IORedis = require('ioredis');
-
 const analyzeRoutes = require('./routes/analyze');
 const clipsRoutes = require('./routes/clips');
 const exportRoutes = require('./routes/export');
@@ -21,11 +20,50 @@ const videoQueue = new Queue('video-processing', { connection: redis });
 // Make queue available to routes
 app.set('videoQueue', videoQueue);
 
-// Middleware
-app.use(helmet());
+// ── CORS — allow all origins so any frontend can connect ──
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://clipspeed.ai',
+  'https://www.clipspeed.ai',
+  'https://clipspeedai.com',
+  'https://www.clipspeedai.com',
+  // Claude.ai artifact preview domains
+  'https://claude.ai',
+  'https://artifacts.claude.ai',
+];
+
 app.use(cors({
-  origin: [process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', 'https://clipspeed.ai'],
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Allow any Railway preview URLs and Claude artifact URLs
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.railway.app') ||
+      origin.endsWith('.claude.ai') ||
+      origin.endsWith('.anthropic.com') ||
+      // Allow any origin in development
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return callback(null, true);
+    }
+    // In production, still allow if CORS_ORIGIN=* is set
+    if (process.env.CORS_ORIGIN === '*') return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
+
+// Handle preflight OPTIONS requests for ALL routes
+app.options('*', cors());
+
+// Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: false,
 }));
 
 // Stripe webhook needs raw body - MUST be before express.json()
@@ -42,10 +80,8 @@ const authMiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'No token provided' });
-
     const user = await verifyAuth(token);
     if (!user) return res.status(401).json({ error: 'Invalid token' });
-
     req.user = user;
     next();
   } catch (err) {
