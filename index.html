@@ -1564,6 +1564,17 @@ async function handleLogin(){var e=document.getElementById('l-email').value.trim
 async function handleSignup(){var n=document.getElementById('s-name').value.trim(),e=document.getElementById('s-email').value.trim(),p=document.getElementById('s-pass').value;if(!n||!e||!p){showToast('⚠️ Please fill in all fields');return}if(!e.includes('@')){showToast('⚠️ Enter a valid email');return}if(p.length<8){showToast('⚠️ Password must be 8+ characters');return}showToast('🔄 Creating account...');try{var d=await sbPost('/auth/v1/signup',{email:e,password:p,data:{full_name:n}});if(d.error||d.error_description){showToast('❌ '+(d.error_description||d.error));return}if(d.id||d.user){closeLogin();showToast('✅ Account created! Check your email.',5000)}else{showToast('❌ Something went wrong')}}catch(er){showToast('❌ Network error — try again')}}
 function handleGoogle(){showToast('🔄 Redirecting to Google...');var r=encodeURIComponent('https://clipspeed.ai/dashboard');setTimeout(function(){window.location.href=SB+'/auth/v1/authorize?provider=google&redirect_to='+r},600)}
 
+// ── STRIPE LINKS ──
+var stripeLinks={
+  starter:{mo:'https://buy.stripe.com/dRm4gB6RJ9JZ4pQ8Za9MY0j',yr:'https://buy.stripe.com/8x2dRb0tlg8n5tU3EQ9MY0f'},
+  pro1:{mo:'https://buy.stripe.com/9B6eVf1xp09p5tU5MY9MY0i',yr:'https://buy.stripe.com/9B6cN7ekb4pF4pQ8Za9MY04'},
+  pro2:{mo:'https://buy.stripe.com/8x2aEZgsjf4j2hIfny9MY0h',yr:'https://buy.stripe.com/eVq4gBdg7bS7bSidfq9MY0a'},
+  pro3:{mo:'https://buy.stripe.com/aFa5kFb7ZaO34pQ8Za9MY0e',yr:'https://buy.stripe.com/3cI9AVb7Z1dt2hI5MY9MY09'},
+  pro4:{mo:'https://buy.stripe.com/5kQbJ33Fx5tJf4u4IU9MY06',yr:'https://buy.stripe.com/6oUbJ31xp1dtf4u2AM9MY07'},
+  pro5:{mo:'https://buy.stripe.com/cNi7sNfof6xN2hIeju9MY0c',yr:'https://buy.stripe.com/aFa4gBb7ZcWbcWm6R29MY08'},
+  agency:{mo:'https://buy.stripe.com/3cI4gBfofaO3cWm4IU9MY0b',yr:'https://buy.stripe.com/5kQ00ldg77BRe0q7V69NY05'}
+};
+
 // ── BILLING TOGGLE ──
 var isYearly=false;
 var prices={free:{mo:0,yr:0},starter:{mo:20,yr:12},pro:{mo:40,yr:24},agency:{mo:200,yr:120}};
@@ -1599,10 +1610,80 @@ function updatePrices(){
   for(var i=1;i<=5;i++){var el=document.getElementById('pp'+i);if(el)el.textContent='$'+packs[i-1]+(yr?'/mo*':'/mo')}
   updatePackCta();
 }
+function goStripe(key){var link=stripeLinks[key];if(!link)return;window.open(isYearly&&link.yr?link.yr:link.mo,'_blank')}
 function updatePackCta(){
   var packs=isYearly?packYr:packMo;
   var price=packs[selectedPack-1];
-  document.getElementById('packCta').textContent=selectedPack+'× Pack — $'+price+'/mo'+(isYearly?' (yearly)':'')+ ' →';
+  var keys=['pro1','pro2','pro3','pro4','pro5'];
+  document.getElementById('packCta').textContent=selectedPack+'× Pack — 
+
+// ── PACK SELECTOR ──
+function selectPack(el,num){
+  document.querySelectorAll('.pack-row').forEach(function(r){r.classList.remove('selected')});
+  el.classList.add('selected');
+  selectedPack=num;
+  var credits=[300,600,900,1200,1500];
+  document.getElementById('proCredits').textContent=credits[num-1].toLocaleString()+' credits/month';
+  var packs=isYearly?packYr:packMo;
+  document.getElementById('price-pro').textContent=packs[num-1];
+  updatePackCta();
+}
+
+// ── COUNTERS ──
+var counted=false;
+function startCounters(){if(counted)return;counted=true;function anim(el,end,suf,dur){var step=end/60,cur=0,t=setInterval(function(){cur+=step;if(cur>=end){cur=end;clearInterval(t)}el.textContent=Math.floor(cur).toLocaleString()+suf},dur/60)}anim(document.getElementById('c1'),2847000,'+',2200);anim(document.getElementById('c2'),9841,'+',2200);anim(document.getElementById('c3'),90,'s',1500);anim(document.getElementById('c4'),94,'%',2000)}
+var hs=document.querySelector('.hero-stats');
+if(hs)new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)startCounters()})},{threshold:0.3}).observe(hs);
+
+// ── SCROLL ANIMATIONS ──
+var obs=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){x.target.style.opacity='1';x.target.style.transform='translateY(0)'}})},{threshold:0.07});
+document.querySelectorAll('.pipe-card,.feat-card,.step-card,.test-card,.price-card,.faq-item,.demo-clip-card,.aff-stat-card,.aff-tier-card,.compare-table tbody tr').forEach(function(el){el.style.opacity='0';el.style.transform='translateY(22px)';el.style.transition='opacity 0.5s ease,transform 0.5s ease';obs.observe(el)});
+
+// ── FAQ ──
+function toggleFaq(el){el.parentElement.classList.toggle('open')}
+
+// ── TICKER ──
+var tickers=['🎉 @kayla_fit just went from 50K → 800K views/month using ClipSpeedAI','🔥 @marcuspod just downloaded his 500th viral clip','🚀 @jaystream just processed a 2-hour gaming VOD in 4 minutes','🌟 @priyam just hit 2.1M views on her first viral clip'];
+var ti=0;
+setInterval(function(){ti=(ti+1)%tickers.length;var el=document.getElementById('tickerText');el.style.opacity='0';setTimeout(function(){el.textContent=tickers[ti];el.style.opacity='1'},300)},4000);
+
+// ── PROCESSING SIMULATION ──
+var procMsgs=['Downloading video at 1080p...','Transcribing audio with Whisper AI...','GPT-4o analyzing viral moments...','Cutting clips with millisecond precision...','Adding animated word-by-word captions...','Uploading to cloud CDN — almost done!'];
+var stepPcts=[0,18,36,54,72,90];
+function simulateProcess(){
+  var url=document.getElementById('dashUrl').value;
+  if(!url){document.getElementById('dashUrl').focus();showToast('⚠️ Paste a YouTube URL first!');return}
+  var proc=document.getElementById('dashProcessing'),fill=document.getElementById('dashProcFill'),status=document.getElementById('dashProcStatus'),btn=document.getElementById('dashGenBtn'),pct=document.getElementById('procPct');
+  proc.style.display='block';btn.disabled=true;btn.textContent='Processing...';
+  ['ps1','ps2','ps3','ps4','ps5','ps6'].forEach(function(id){document.getElementById(id).className='proc-step'});
+  fill.style.width='0%';pct.innerHTML='0<span style="font-size:28px">%</span>';
+  var step=0,curPct=0;
+  var pctInterval=setInterval(function(){var target=step<6?stepPcts[step]||0:100;if(curPct<target){curPct=Math.min(curPct+1,target);pct.innerHTML=curPct+'<span style="font-size:28px">%</span>'}},80);
+  function next(){
+    if(step>0){document.getElementById(['ps1','ps2','ps3','ps4','ps5','ps6'][step-1]).className='proc-step done'}
+    if(step<6){var cur=document.getElementById(['ps1','ps2','ps3','ps4','ps5','ps6'][step]);cur.className='proc-step active';status.textContent=procMsgs[step];fill.style.width=stepPcts[step]+'%';step++;setTimeout(next,step===3?2200:1400)}
+    else{fill.style.width='100%';var fi=setInterval(function(){if(curPct>=100){clearInterval(fi);clearInterval(pctInterval);status.textContent='✅ Done! Your clips are ready below.';setTimeout(function(){proc.style.display='none';btn.disabled=false;btn.textContent='Generate Clips ⚡';document.getElementById('dashClipsSection').scrollIntoView({behavior:'smooth',block:'start'})},1200)}else{curPct++;pct.innerHTML=curPct+'<span style="font-size:28px">%</span>'}},40)}
+  }
+  next();
+}
+
+// ── EDITOR ──
+function openEditor(){document.getElementById('editorOverlay').classList.add('open');document.getElementById('editorPanel').classList.add('open');document.body.style.overflow='hidden'}
+function closeEditor(){document.getElementById('editorOverlay').classList.remove('open');document.getElementById('editorPanel').classList.remove('open');document.body.style.overflow=''}
+var capStyles={bold:{background:'rgba(0,0,0,0.85)',color:'#fff',fontWeight:'900',textShadow:'none'},neon:{background:'transparent',color:'#22d3ee',fontWeight:'900',textShadow:'0 0 14px #22d3ee'},fire:{background:'transparent',color:'#f97316',fontWeight:'900',textShadow:'0 0 10px rgba(249,115,22,0.5)'},minimal:{background:'transparent',color:'rgba(255,255,255,0.9)',fontWeight:'400',textShadow:'none'},shadow:{background:'transparent',color:'#fff',fontWeight:'900',textShadow:'3px 3px 14px rgba(0,0,0,0.95)'}};
+function setRatio(r,el){document.querySelectorAll('.ratio-btn').forEach(function(b){b.classList.remove('active')});el.classList.add('active');document.getElementById('ratioLabel').textContent=r}
+function setCapStyle(s,el){document.querySelectorAll('.cap-style').forEach(function(b){b.classList.remove('active')});el.classList.add('active');Object.assign(document.getElementById('captionPreview').style,capStyles[s])}
+function setFontSize(v){document.getElementById('fontSizeVal').textContent=v+'px';document.getElementById('captionPreview').style.fontSize=v+'px'}
+function setColor(c,el){document.querySelectorAll('.color-swatch').forEach(function(b){b.classList.remove('active')});el.classList.add('active');document.getElementById('captionPreview').style.color=c}
+function toggleSwitch(el){el.classList.toggle('on')}
+
+// ── AFFILIATE ──
+function copyAffLink(){navigator.clipboard.writeText(document.getElementById('affLink').textContent).then(function(){showToast('✅ Referral link copied to clipboard!')})}
+</script>
+</body>
+</html>
++price+'/mo'+(isYearly?' (yearly)':'')+ ' →';
+  document.getElementById('packCta').onclick=function(){goStripe(keys[selectedPack-1])};
 }
 
 // ── PACK SELECTOR ──
