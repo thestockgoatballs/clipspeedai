@@ -5,29 +5,22 @@ const { supabase } = require('../lib/supabase');
 const { checkAndIncrementClipUsage } = require('../lib/rateLimit');
 const { extractVideoId } = require('../pipeline/download');
 
-/**
- * POST /analyze
- * Body: { url: "https://www.youtube.com/watch?v=..." }
- * 
- * Creates a project and queues the video for processing.
- * Returns the project ID for polling status.
- */
+// POST /analyze
 router.post('/', async (req, res) => {
   try {
-    const { url, captionStyle } = req.body;
+    const { url, youtube_url, captionStyle } = req.body;
+    const videoUrl = url || youtube_url; // FIX 1: frontend sends both 'url' and 'youtube_url'
     const userId = req.user.id;
 
-    // Validate URL
-    if (!url || typeof url !== 'string') {
+    if (!videoUrl || typeof videoUrl !== 'string') {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    const videoId = extractVideoId(url);
+    const videoId = extractVideoId(videoUrl);
     if (!videoId) {
       return res.status(400).json({ error: 'Invalid YouTube URL. Paste a youtube.com or youtu.be link.' });
     }
 
-    // Check user's plan and clip limit
     const usage = await checkAndIncrementClipUsage(userId);
     if (!usage.allowed) {
       return res.status(403).json({
@@ -39,14 +32,13 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Create project in database
     const projectId = uuidv4();
     const { error: dbError } = await supabase.from('projects').insert({
       id: projectId,
       user_id: userId,
-      video_url: url,
+      video_url: videoUrl,
       video_id: videoId,
-      status: 'pending',
+      status: 'queued', // FIX 2: was 'pending' but frontend polls for 'queued'
     });
 
     if (dbError) {
@@ -54,27 +46,31 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create project' });
     }
 
-    // Add to processing queue
     const queue = req.app.get('videoQueue');
     await queue.add('process-video', {
       projectId,
-      videoUrl: url,
+      videoUrl,
       userId,
       captionStyle: captionStyle || 'bold',
     }, {
       jobId: projectId,
-      attempts: 2,
+      attempts: 3,                                  // bumped from 2 to 3
       backoff: { type: 'exponential', delay: 5000 },
-      removeOnComplete: { age: 3600 }, // keep completed jobs for 1 hour
-      removeOnFail: { age: 86400 }, // keep failed jobs for 24 hours
+      removeOnComplete: { age: 3600 },
+      removeOnFail: { age: 86400 },
     });
 
-    console.log(`📋 Queued project ${projectId} for ${url}`);
+    console.log(`📋 Queued project ${projectId} for ${videoUrl}`);
+
+    // Get queue position to show user
+    const waiting = await queue.getWaiting();
+    const position = waiting.findIndex(j => j.id === projectId) + 1;
 
     res.json({
       projectId,
-      status: 'pending',
-      message: 'Video queued for processing',
+      project_id: projectId, // FIX 1: frontend reads 'project_id' not 'projectId'
+      status: 'queued',
+      message: position > 1 ? `You're #${position} in line` : 'Starting shortly...',
       videoId,
     });
 
@@ -84,10 +80,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-/**
- * GET /analyze/:projectId/status
- * Returns current processing status + progress
- */
+// GET /analyze/:projectId/status  — frontend polls this
 router.get('/:projectId/status', async (req, res) => {
   try {
     const { projectId } = req.params;
@@ -104,14 +97,14 @@ router.get('/:projectId/status', async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Get job progress from queue
     const queue = req.app.get('videoQueue');
     const job = await queue.getJob(projectId);
     const progress = job ? await job.progress : 0;
 
     res.json({
       projectId: project.id,
-      status: project.status,
+      id: project.id,          // FIX 1: frontend also reads 'id'
+      status: project.status,  // queued|downloading|transcribing|analyzing|cutting|captioning|uploading|done|failed
       progress: typeof progress === 'number' ? progress : 0,
       videoTitle: project.video_title,
       creatorName: project.creator_name,
@@ -124,6 +117,35 @@ router.get('/:projectId/status', async (req, res) => {
   } catch (err) {
     console.error('Status check error:', err);
     res.status(500).json({ error: 'Failed to check status' });
+  }
+});
+
+// GET /analyze/:projectId  — frontend also polls this URL (without /status)
+router.get('/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user.id;
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('id, status, error_message, total_clips_found')
+      .eq('id', projectId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    res.json({
+      id: project.id,
+      status: project.status,
+      error: project.error_message || null,
+      clips_count: project.total_clips_found || 0,
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to get project' });
   }
 });
 
