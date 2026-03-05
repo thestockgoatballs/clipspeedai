@@ -5,100 +5,70 @@ const path = require('path');
 const CLIPS_DIR = '/tmp/clipspeed/clips';
 
 /**
- * Detect the best crop X position by sampling frames and finding
- * where faces/motion are concentrated — left, center, or right third.
- * Returns a crop x-offset as a fraction of video width (0.0 to ~0.55 for 9:16 crop)
+ * Detect which horizontal zone has the most motion (= who is talking)
+ * Splits video into left/center/right thirds and measures motion in each
  */
-function detectSpeakerCropX(videoPath, startSeconds, duration) {
+function detectActiveSpeakerZone(videoPath, startSeconds, duration) {
   try {
-    // Sample 6 frames spread across the clip
-    const tmpDir = '/tmp/clipspeed/facedetect';
-    fs.mkdirSync(tmpDir, { recursive: true });
-    const sampleBase = path.join(tmpDir, `sample_${Date.now()}`);
+    const sampleDur = Math.min(duration, 20);
+    const tmpBase = `/tmp/clipspeed/motion_${Date.now()}`;
 
-    // Extract 6 sample frames
+    // Extract a short sample at low res for speed
+    const samplePath = `${tmpBase}_sample.mp4`;
     execSync(
-      `ffmpeg -y -ss ${startSeconds} -t ${Math.min(duration, 30)} -i "${videoPath}" ` +
-      `-vf "fps=0.2,scale=320:-1" -frames:v 6 "${sampleBase}_%02d.jpg" 2>/dev/null`,
-      { timeout: 15000, stdio: 'pipe', shell: true }
+      `ffmpeg -y -ss ${startSeconds} -t ${sampleDur} -i "${videoPath}" ` +
+      `-vf "scale=360:-2,fps=5" -an -c:v libx264 -preset ultrafast -crf 35 "${samplePath}" 2>/dev/null`,
+      { timeout: 30000, stdio: 'pipe', shell: true }
     );
 
-    // Use ffprobe to get video dimensions
-    const probeOut = execSync(
-      `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${videoPath}"`,
-      { encoding: 'utf-8', timeout: 5000 }
+    // Measure motion energy in left third
+    const leftOut = execSync(
+      `ffmpeg -y -i "${samplePath}" -vf "crop=iw/3:ih:0:0,mestimate,metadata=print:file=-" -f null - 2>&1 | grep "motion_est" | head -20 || echo "0"`,
+      { encoding: 'utf-8', timeout: 15000, stdio: 'pipe', shell: true }
     ).trim();
-    const [vidW, vidH] = probeOut.split(',').map(Number);
 
-    if (!vidW || !vidH) return 0.5; // fallback to center
+    // Measure motion energy in right third  
+    const rightOut = execSync(
+      `ffmpeg -y -i "${samplePath}" -vf "crop=iw/3:ih:2*iw/3:0,mestimate,metadata=print:file=-" -f null - 2>&1 | grep "motion_est" | head -20 || echo "0"`,
+      { encoding: 'utf-8', timeout: 15000, stdio: 'pipe', shell: true }
+    ).trim();
 
-    // Use ffmpeg's signalstats/edge detection on sample frames to find motion zones
-    // We'll measure average brightness in left/center/right thirds of each frame
-    const frames = fs.readdirSync(tmpDir).filter(f => f.startsWith(path.basename(sampleBase)));
+    // Count motion frames in each zone
+    const leftMotion  = (leftOut.match(/motion_est/g)  || []).length;
+    const rightMotion = (rightOut.match(/motion_est/g) || []).length;
 
-    let leftScore = 0, centerScore = 0, rightScore = 0;
+    // Clean up
+    try { fs.unlinkSync(samplePath); } catch (e) {}
 
-    for (const frame of frames) {
-      const framePath = path.join(tmpDir, frame);
-      try {
-        // Measure mean brightness in left third
-        const left = execSync(
-          `ffprobe -v error -select_streams v -show_entries frame_tags=lavfi.signalstats.YAVG ` +
-          `-f lavfi "movie=${framePath},crop=iw/3:ih:0:0,signalstats" 2>/dev/null || echo "0"`,
-          { encoding: 'utf-8', timeout: 5000, shell: true }
-        ).trim();
-        const center = execSync(
-          `ffprobe -v error -select_streams v -show_entries frame_tags=lavfi.signalstats.YAVG ` +
-          `-f lavfi "movie=${framePath},crop=iw/3:ih:iw/3:0,signalstats" 2>/dev/null || echo "0"`,
-          { encoding: 'utf-8', timeout: 5000, shell: true }
-        ).trim();
-        const right = execSync(
-          `ffprobe -v error -select_streams v -show_entries frame_tags=lavfi.signalstats.YAVG ` +
-          `-f lavfi "movie=${framePath},crop=iw/3:ih:2*iw/3:0,signalstats" 2>/dev/null || echo "0"`,
-          { encoding: 'utf-8', timeout: 5000, shell: true }
-        ).trim();
+    console.log(`  📊 Motion scores — left: ${leftMotion}, right: ${rightMotion}`);
 
-        leftScore   += parseFloat(left.split('\n').find(l => l.includes('YAVG'))?.split('=')[1] || 0);
-        centerScore += parseFloat(center.split('\n').find(l => l.includes('YAVG'))?.split('=')[1] || 0);
-        rightScore  += parseFloat(right.split('\n').find(l => l.includes('YAVG'))?.split('=')[1] || 0);
-      } catch (e) {}
-      try { fs.unlinkSync(framePath); } catch (e) {}
-    }
-
-    // Determine which third has the most "content" (brightest = most face/skin)
-    // For podcast setups: pick the dominant zone
-    const max = Math.max(leftScore, centerScore, rightScore);
-    if (max === 0) return 0.5; // fallback center
-
-    // Convert zone to crop x fraction
-    // 9:16 crop width = ih * 9/16, so x offset = (vidW - cropW) * fraction
-    if (leftScore === max)   return 0.05;  // crop toward left speaker
-    if (rightScore === max)  return 0.95;  // crop toward right speaker
-    return 0.5;                            // center
+    // If one side has significantly more motion, crop there
+    if (leftMotion > rightMotion * 1.3)  return 'left';
+    if (rightMotion > leftMotion * 1.3)  return 'right';
+    return 'center'; // similar motion = use center (solo speaker or equal activity)
 
   } catch (e) {
-    console.warn('⚠️ Speaker detection failed, using center crop:', e.message?.slice(0, 80));
-    return 0.5; // safe fallback
+    console.warn('  ⚠️ Motion detection failed, using center:', e.message?.slice(0, 60));
+    return 'center';
   }
 }
 
 /**
- * Build the ffmpeg crop filter string for speaker-aware 9:16 framing
- * xFraction: 0.05=left, 0.5=center, 0.95=right
+ * Convert zone to ffmpeg crop x expression
  */
-function buildCropFilter(xFraction) {
-  // cropW = ih * 9/16
-  // x = (iw - cropW) * xFraction  →  expressed as ffmpeg math
-  const xExpr = xFraction === 0.5
-    ? '(iw-ih*9/16)/2'                          // center
-    : xFraction < 0.5
-      ? `(iw-ih*9/16)*${xFraction.toFixed(3)}`  // left-biased
-      : `(iw-ih*9/16)*${xFraction.toFixed(3)}`; // right-biased
-  return `crop=ih*9/16:ih:${xExpr}:0,scale=1080:1920:flags=lanczos`;
+function buildCropFilter(zone) {
+  const cropW = 'ih*9/16'; // width of 9:16 crop
+  let xExpr;
+  switch (zone) {
+    case 'left':   xExpr = `(iw-${cropW})*0.15`; break; // bias toward left person
+    case 'right':  xExpr = `(iw-${cropW})*0.85`; break; // bias toward right person
+    default:       xExpr = `(iw-${cropW})/2`;    break; // center
+  }
+  return `crop=${cropW}:ih:${xExpr}:0,scale=1080:1920:flags=lanczos`;
 }
 
 /**
- * Cuts a video into individual clips using FFmpeg with smart speaker tracking
+ * Cuts video into clips with smart speaker-tracking crop
  */
 async function cutClips(videoPath, clips, projectId) {
   console.log(`✂️ Cutting ${clips.length} clips from video...`);
@@ -113,13 +83,12 @@ async function cutClips(videoPath, clips, projectId) {
     const duration   = clip.endSeconds - clip.startSeconds;
 
     try {
-      // Detect where the active speaker is in this clip
-      console.log(`  🎯 Detecting speaker position for clip ${clip.id}...`);
-      const xFraction = detectSpeakerCropX(videoPath, clip.startSeconds, duration);
-      const position  = xFraction < 0.3 ? 'left' : xFraction > 0.7 ? 'right' : 'center';
-      console.log(`  👤 Speaker detected: ${position} (x=${xFraction.toFixed(2)})`);
+      // Detect active speaker zone for this clip
+      console.log(`  🎯 Detecting speaker for clip ${clip.id}...`);
+      const zone = detectActiveSpeakerZone(videoPath, clip.startSeconds, duration);
+      console.log(`  👤 Active speaker zone: ${zone}`);
 
-      const cropFilter = buildCropFilter(xFraction);
+      const cropFilter = buildCropFilter(zone);
 
       const cmd = [
         'ffmpeg', '-y',
@@ -139,7 +108,7 @@ async function cutClips(videoPath, clips, projectId) {
 
       execSync(cmd, { timeout: 120000, stdio: 'pipe', shell: true });
 
-      // Thumbnail using same crop
+      // Thumbnail with same crop
       const thumbTime = (clip.startSeconds + duration / 2).toFixed(2);
       const thumbCrop = cropFilter.replace('scale=1080:1920', 'scale=540:960');
       execSync(
@@ -149,16 +118,16 @@ async function cutClips(videoPath, clips, projectId) {
 
       const stats = fs.statSync(outputPath);
       results.push({
-        clipId: clip.id,
-        clipPath: outputPath,
+        clipId:    clip.id,
+        clipPath:  outputPath,
         thumbPath: fs.existsSync(thumbPath) ? thumbPath : null,
-        fileSize: stats.size,
-        success: true,
+        fileSize:  stats.size,
+        success:   true,
       });
-      console.log(`  ✓ Clip ${clip.id}: ${(stats.size / 1024 / 1024).toFixed(1)}MB (${duration.toFixed(1)}s) [${position}]`);
+      console.log(`  ✓ Clip ${clip.id}: ${(stats.size / 1024 / 1024).toFixed(1)}MB (${duration.toFixed(1)}s) [${zone}]`);
 
     } catch (err) {
-      console.error(`  ✗ Clip ${clip.id} failed: ${err.message}`);
+      console.error(`  ✗ Clip ${clip.id} failed: ${err.message?.slice(0, 120)}`);
       results.push({ clipId: clip.id, clipPath: null, thumbPath: null, fileSize: 0, success: false, error: err.message });
     }
   }
