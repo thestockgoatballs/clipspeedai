@@ -1377,12 +1377,32 @@ function rotateTicker(){
   setTimeout(function(){el.textContent=tickers[tickerIdx];el.style.opacity='1'},300);
 }
 
+// ── Browser back/forward button support ──
+window.addEventListener('popstate',function(e){
+  var page=(e.state&&e.state.page)||'landing';
+  if(page==='landing')_showLanding();
+  else _switchTab(page,null);
+});
+function pushPage(page){
+  history.pushState({page:page},'',page==='landing'?'/':'#'+page);
+}
+var _showLanding=showLanding;
+showLanding=function(){pushPage('landing');_showLanding()};
+var _switchTab=switchTab;
+switchTab=function(page,btn){pushPage(page);_switchTab(page,btn)};
+
 window.addEventListener('DOMContentLoaded',function(){
   animateCounter('c1',2847293,'',2000);
   animateCounter('c2',9847,'',2000);
   animateCounter('c3',90,'s',1500);
   animateCounter('c4',94,'%',1800);
   setInterval(rotateTicker,4000);
+
+  // Handle hash on load
+  var hash=window.location.hash.replace('#','');
+  if(hash==='dashboard'||hash==='affiliate'){
+    setTimeout(function(){switchTab(hash,null)},100);
+  }
 
   var params=new URLSearchParams(window.location.search);
   var token=params.get('token')||params.get('access_token');
