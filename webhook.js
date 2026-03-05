@@ -23,7 +23,6 @@ router.post('/stripe', async (req, res) => {
     console.warn('⚠️ Stripe not configured, skipping webhook');
     return res.json({ received: true });
   }
-
   const sig = req.headers['stripe-signature'];
   let event;
   try {
@@ -32,7 +31,6 @@ router.post('/stripe', async (req, res) => {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -44,7 +42,7 @@ router.post('/stripe', async (req, res) => {
             plan,
             stripe_customer_id: session.customer,
             stripe_subscription_id: session.subscription,
-            clips_limit: PLAN_LIMITS[plan] || 10,
+            clips_limit: PLAN_LIMITS[plan] || 30,
           }).eq('id', userId);
           console.log(`💳 User ${userId} upgraded to ${plan}`);
         }
@@ -67,7 +65,7 @@ router.post('/stripe', async (req, res) => {
         const subscription = event.data.object;
         const { data: profiles } = await supabase.from('profiles').select('id').eq('stripe_subscription_id', subscription.id);
         if (profiles?.[0]) {
-          await supabase.from('profiles').update({ plan: 'free', stripe_subscription_id: null, clips_limit: 10 }).eq('id', profiles[0].id);
+          await supabase.from('profiles').update({ plan: 'free', stripe_subscription_id: null, clips_limit: 30 }).eq('id', profiles[0].id);
           console.log(`❌ Subscription cancelled for user ${profiles[0].id}`);
         }
         break;
