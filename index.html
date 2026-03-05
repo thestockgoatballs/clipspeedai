@@ -366,14 +366,12 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
 <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
 <div class="toast" id="toast"></div>
 
-<!-- ANNOUNCE BAR -->
 <div class="announce-bar">
   <span class="hot">🔥 LIMITED</span>
   <span>Save 40% with yearly billing — offer ends soon · </span>
   <span style="color:var(--cyan);font-weight:700;cursor:pointer" onclick="setBilling(true);goAnchor('pricing')">Claim Discount →</span>
 </div>
 
-<!-- NAV -->
 <nav>
   <div class="nav-logo" onclick="showLanding()">⚡ ClipSpeedAI</div>
   <div class="nav-links">
@@ -388,7 +386,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
   </div>
 </nav>
 
-<!-- PAGE TABS -->
 <div class="page-tabs" id="pageTabs">
   <button class="tab-btn" onclick="switchTab('landing',this)">🏠 Home</button>
   <button class="tab-btn" onclick="switchTab('dashboard',this)">📋 Dashboard</button>
@@ -396,7 +393,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
   <button class="tab-btn" onclick="goAnchor('pricing')">💳 Upgrade</button>
 </div>
 
-<!-- LOGIN MODAL -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <button class="login-close" onclick="closeLogin()">✕</button>
@@ -433,7 +429,7 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
   </div>
 </div>
 
-<!-- ══════════ LANDING ══════════ -->
+<!-- LANDING -->
 <div id="landing" class="page active" style="padding-top:106px">
 <div class="hero">
   <div class="hero-badge"><div class="live-dot"></div> #1 Fastest AI Clip Tool · 3–5× Faster Than OpusClip</div>
@@ -738,7 +734,7 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
 </footer>
 </div>
 
-<!-- ══════════ DASHBOARD ══════════ -->
+<!-- DASHBOARD -->
 <div id="dashboard" class="page">
   <div class="dash-hero">
     <div class="dash-hero-inner">
@@ -778,7 +774,7 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
   </div>
 </div>
 
-<!-- ══════════ AFFILIATE ══════════ -->
+<!-- AFFILIATE -->
 <div id="affiliate" class="page">
   <div style="max-width:900px;margin:0 auto;padding:0 24px">
     <div class="aff-header"><div><div class="aff-title">💰 Affiliate Dashboard</div><div class="aff-subtitle">Earn recurring commissions every month — forever</div></div><div class="aff-tier-badge">🥇 Gold Tier · 35% Commission</div></div>
@@ -948,4 +944,300 @@ function handleGoogle(){
   window.location.href=API+'/auth/google?redirect_to='+encodeURIComponent(window.location.origin);
 }
 
-function heroGen
+function heroGenerate(){
+  var url=document.getElementById('heroUrl').value.trim();
+  if(!getToken()){openLogin('signup');return}
+  if(url)sessionStorage.setItem('cs_hero_url',url);
+  switchTab('dashboard',null);
+  if(url){
+    setTimeout(function(){
+      document.getElementById('dashUrl').value=url;
+      startGenerate();
+    },300);
+  }
+}
+
+async function startGenerate(){
+  if(!getToken()){openLogin('signup');return}
+  var url=document.getElementById('dashUrl').value.trim();
+  if(!url){showToast('⚠️ Please paste a YouTube URL');return}
+  if(!url.includes('youtube.com')&&!url.includes('youtu.be')){showToast('⚠️ Please enter a valid YouTube URL');return}
+  var btn=document.getElementById('dashGenBtn');
+  btn.disabled=true;btn.textContent='Starting...';
+  document.getElementById('dashProcessing').style.display='block';
+  document.getElementById('realClipsSection').style.display='none';
+  document.getElementById('procError').style.display='none';
+  resetSteps();
+  setStep('queued','active');
+  document.getElementById('dashProcStatus').textContent='Submitting to AI pipeline...';
+  try{
+    var r=await authFetch(API+'/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({youtube_url:url})});
+    var d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Failed to start');
+    currentProjectId=d.project_id||d.id;
+    sessionStorage.setItem('cs_last_project',currentProjectId);
+    btn.textContent='Processing...';
+    pollStatus();
+  }catch(e){
+    if(e.message==='TOKEN_EXPIRED')return;
+    document.getElementById('procError').textContent='Error: '+e.message;
+    document.getElementById('procError').style.display='block';
+    btn.disabled=false;btn.textContent='Generate Clips ⚡';
+  }
+}
+
+function resetSteps(){
+  ['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'].forEach(function(s){
+    var el=document.getElementById('ps-'+s);if(el)el.className='proc-step';
+  });
+  document.getElementById('dashProcFill').style.width='0%';
+  document.getElementById('procPct').innerHTML='0<span style="font-size:28px">%</span>';
+}
+
+function setStep(id,state){
+  var el=document.getElementById('ps-'+id);if(el)el.className='proc-step '+state;
+}
+
+var stepMap={
+  queued:{pct:5,steps:['queued']},
+  downloading:{pct:15,steps:['queued','downloading']},
+  transcribing:{pct:35,steps:['queued','downloading','transcribing']},
+  analyzing:{pct:55,steps:['queued','downloading','transcribing','analyzing']},
+  cutting:{pct:70,steps:['queued','downloading','transcribing','analyzing','cutting']},
+  captioning:{pct:82,steps:['queued','downloading','transcribing','analyzing','cutting','captioning']},
+  reframing:{pct:91,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing']},
+  uploading:{pct:97,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
+  done:{pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']}
+};
+
+var statusMessages={
+  queued:'Queued — pipeline ready...',
+  downloading:'Downloading video at 1080p...',
+  transcribing:'Whisper AI transcribing audio...',
+  analyzing:'GPT-4o detecting viral moments...',
+  cutting:'FFmpeg precision cutting clips...',
+  captioning:'Adding animated captions...',
+  reframing:'Smart reframing for all platforms...',
+  uploading:'Uploading clips to CDN...',
+  done:'Done! Your viral clips are ready 🎉'
+};
+
+function updateProgress(status){
+  var info=stepMap[status]||stepMap['queued'];
+  var allSteps=['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'];
+  allSteps.forEach(function(s){
+    if(info.steps.indexOf(s)!==-1){
+      setStep(s,status==='done'?'done':(s===info.steps[info.steps.length-1]?'active':'done'));
+    }
+  });
+  if(status==='done')allSteps.forEach(function(s){setStep(s,'done')});
+  document.getElementById('dashProcFill').style.width=info.pct+'%';
+  document.getElementById('procPct').innerHTML=info.pct+'<span style="font-size:28px">%</span>';
+  document.getElementById('dashProcStatus').textContent=statusMessages[status]||'Processing...';
+}
+
+async function pollStatus(){
+  if(!currentProjectId)return;
+  try{
+    var r=await authFetch(API+'/projects/'+currentProjectId);
+    var d=await r.json();
+    var status=(d.status||'queued').toLowerCase();
+    updateProgress(status);
+    if(status==='done'||status==='completed'||status==='complete'){
+      document.getElementById('dashGenBtn').disabled=false;
+      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';
+      loadClips(currentProjectId);return;
+    }
+    if(status==='error'||status==='failed'){
+      document.getElementById('procError').textContent='Processing failed: '+(d.error||'Unknown error');
+      document.getElementById('procError').style.display='block';
+      document.getElementById('dashGenBtn').disabled=false;
+      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';return;
+    }
+    pollTimer=setTimeout(pollStatus,3000);
+  }catch(e){
+    if(e.message==='TOKEN_EXPIRED')return;
+    pollTimer=setTimeout(pollStatus,5000);
+  }
+}
+
+async function loadClips(projectId){
+  try{
+    var r=await authFetch(API+'/projects/'+projectId+'/clips');
+    var d=await r.json();
+    var clips=d.clips||d||[];
+    if(!Array.isArray(clips)||clips.length===0){showToast('No clips found.');return}
+    renderClips(clips);
+  }catch(e){if(e.message!=='TOKEN_EXPIRED')showToast('Could not load clips.')}
+}
+
+function renderClips(clips){
+  var grid=document.getElementById('realClipsGrid');
+  var section=document.getElementById('realClipsSection');
+  grid.innerHTML='';
+  clips.sort(function(a,b){return(b.viral_score||0)-(a.viral_score||0)});
+  clips.forEach(function(clip,i){
+    var score=clip.viral_score||clip.score||Math.floor(75+Math.random()*22);
+    var title=clip.title||'Viral Clip #'+(i+1);
+    var hook=clip.hook||clip.hook_line||'';
+    var tags=clip.hashtags||(clip.tags?clip.tags.join(' '):'');
+    var dur=clip.duration?Math.round(clip.duration)+'s':'~12s';
+    var url=clip.url||clip.download_url||clip.video_url||'';
+    var card=document.createElement('div');
+    card.className='real-clip-card';
+    card.style.animationDelay=(i*0.08)+'s';
+    card.innerHTML='<div class="real-clip-video-wrap">'+(url?'<video src="'+url+'" controls playsinline preload="metadata"></video>':'<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px">Preview unavailable</div>')+'<div class="real-clip-score">⚡ '+score+'</div></div>'
+      +'<div class="real-clip-info"><div class="real-clip-title">'+title+'</div>'
+      +(hook?'<div class="real-clip-hook">"'+hook+'"</div>':'')
+      +(tags?'<div class="real-clip-tags">'+tags+'</div>':'')
+      +'<div class="real-clip-meta">Duration: '+dur+' · Viral Score: '+score+'/100</div>'
+      +'<div class="real-clip-actions">'
+      +(url?'<button class="clip-dl-btn clip-dl-primary" onclick="downloadClip(\''+url+'\',\'clip-'+i+'.mp4\')">⬇️ Download</button>':'')
+      +'<button class="clip-dl-btn clip-dl-secondary" onclick="copyClipUrl(\''+url+'\')">🔗 Copy Link</button>'
+      +'</div></div>';
+    grid.appendChild(card);
+  });
+  document.getElementById('realClipsTitle').textContent='⚡ Your Clips ('+clips.length+')';
+  document.getElementById('realClipsSub').textContent='Sorted by viral score — ready to post';
+  section.style.display='block';
+  section.scrollIntoView({behavior:'smooth'});
+}
+
+function downloadClip(url,filename){
+  if(!url){showToast('No download URL available');return}
+  var a=document.createElement('a');a.href=url;a.download=filename||'clip.mp4';a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function copyClipUrl(url){
+  if(!url){showToast('No URL to copy');return}
+  navigator.clipboard.writeText(url).then(function(){showToast('🔗 Link copied!')}).catch(function(){showToast('Could not copy link')});
+}
+
+function toggleFaq(el){
+  var item=el.parentElement;
+  var wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open')});
+  if(!wasOpen)item.classList.add('open');
+}
+
+function switchComp(name,btn){
+  document.querySelectorAll('.comp-tbl').forEach(function(t){t.style.display='none'});
+  var tbl=document.getElementById('tbl-'+name);if(tbl)tbl.style.display='table';
+  document.querySelectorAll('.comp-tab').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+}
+
+function toggleBilling(){setBilling(!isYearly)}
+function setBilling(yearly){
+  isYearly=yearly;
+  document.getElementById('billingTrack').classList.toggle('yearly',yearly);
+  document.getElementById('lbl-monthly').classList.toggle('active',!yearly);
+  document.getElementById('lbl-yearly').classList.toggle('active',yearly);
+  var prices={starter:[20,12],pro:[40,24],agency:[200,120]};
+  Object.keys(prices).forEach(function(k){
+    var p=prices[k];
+    document.getElementById('price-'+k).textContent=yearly?p[1]:p[0];
+    var n=document.getElementById('note-'+k);
+    if(n)n.textContent=yearly?'Billed $'+(p[1]*12)+'/yr (save $'+((p[0]-p[1])*12)+')':'';
+    var pd=document.getElementById('period-'+k);
+    if(pd)pd.textContent=yearly?'per month, billed yearly':'per month';
+  });
+  var packPrices=yearly?['$24/mo','$42/mo','$60/mo','$72/mo','$84/mo']:['$40/mo','$70/mo','$100/mo','$120/mo','$140/mo'];
+  for(var i=1;i<=5;i++){var el=document.getElementById('pp'+i);if(el)el.textContent=packPrices[i-1]}
+  updatePackCta();
+}
+
+function selectPack(el,num){
+  document.querySelectorAll('.pack-row').forEach(function(r){r.classList.remove('selected')});
+  el.classList.add('selected');selectedPack=num;updatePackCta();
+}
+
+function updatePackCta(){
+  var pm=[40,70,100,120,140],py=[24,42,60,72,84];
+  var prices=isYearly?py:pm;
+  var credits=[300,600,900,1200,1500];
+  var btn=document.getElementById('packCta');
+  if(btn){btn.textContent=selectedPack+'× Pack — $'+prices[selectedPack-1]+'/mo →';btn.onclick=function(){goStripe('pro'+selectedPack)}}
+  var c=document.getElementById('proCredits');if(c)c.textContent=credits[selectedPack-1]+' credits/month';
+}
+
+function goStripe(plan){
+  if(!getToken()){openLogin('signup');return}
+  // ⚠️ REPLACE THESE WITH YOUR REAL STRIPE PAYMENT LINKS
+  var links={
+     Starter $20/mo — dRm4gB6RJ9JZ4pQ8Za9MY0j
+✅ Starter $12/mo yearly — 8x2dRb0tlg8n5tU3EQ9MY0f
+✅ Pro 1× $40/mo — 9B6eVf1xp09p5tU5MY9MY0i
+✅ Pro 1× $24/mo yearly — 9B6cN7ekb4pF4pQ8Za9MY04
+✅ Pro 2× $70/mo — 8x2aEZgsjf4j2hIfny9MY0h
+✅ Pro 2× $42/mo yearly — eVq4gBdg7bS7bSidfq9MY0a
+✅ Pro 3× $60/mo yearly — 3cI9AVb7Z1dt2hI5MY9MY09
+✅ Pro 4× $120/mo — 5kQbJ33Fx5tJf4u4IU9MY06
+✅ Pro 4× $72/mo yearly — 6oUbJ31xp1dtf4u2AM9MY07
+✅ Pro 5× $140/mo — cNi7sNfof6xN2hIeju9MY0c
+✅ Pro 5× $84/mo yearly — aFa4gBb7ZcWbcWm6R29MY08
+✅ Agency $200/mo — 3cI4gBfofaO3cWm4IU9MY0b
+✅ Agency $864/yr — 5kQ00ldg77BRe0q7V69NY05  };
+  var link=links[plan];
+  if(link&&!link.includes('YOUR_'))window.open(link,'_blank');
+  else showToast('⚠️ Stripe link not configured for: '+plan);
+}
+
+function copyAffLink(){
+  var link=document.getElementById('affLink').textContent;
+  navigator.clipboard.writeText(link).then(function(){showToast('🔗 Affiliate link copied!')}).catch(function(){showToast('Could not copy')});
+}
+
+function goSlide(i){
+  var track=document.getElementById('carouselTrack');if(!track)return;
+  var slides=track.querySelectorAll('.carousel-slide');
+  if(slides[i])slides[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  document.querySelectorAll('.cdot').forEach(function(d,j){d.classList.toggle('active',j===i)});
+}
+
+function animateCounter(id,target,suffix,duration){
+  var el=document.getElementById(id);if(!el)return;
+  var start=0,step=target/((duration||1500)/16);
+  var t=setInterval(function(){
+    start+=step;
+    if(start>=target){start=target;clearInterval(t)}
+    el.textContent=Math.floor(start).toLocaleString()+(suffix||'');
+  },16);
+}
+
+var tickers=['🎉 @kayla_fit just went from 50K → 800K views/month','⚡ @marcus_pod just hit +340% views after switching','🚀 @jaystream processes clips 8× faster now','💰 @devon_k earning $1,200/mo in affiliate income'];
+var tickerIdx=0;
+function rotateTicker(){
+  var el=document.getElementById('tickerText');if(!el)return;
+  tickerIdx=(tickerIdx+1)%tickers.length;
+  el.style.opacity='0';
+  setTimeout(function(){el.textContent=tickers[tickerIdx];el.style.opacity='1'},300);
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  animateCounter('c1',2847293,'',2000);
+  animateCounter('c2',9847,'',2000);
+  animateCounter('c3',90,'s',1500);
+  animateCounter('c4',94,'%',1800);
+  setInterval(rotateTicker,4000);
+
+  // Handle Google OAuth redirect
+  var params=new URLSearchParams(window.location.search);
+  var token=params.get('token')||params.get('access_token');
+  if(token){
+    setToken(token);
+    window.history.replaceState({},'',window.location.pathname);
+    showToast('✅ Signed in with Google!');
+    setTimeout(function(){switchTab('dashboard',null)},800);
+  }
+
+  // Restore nav if already logged in
+  if(getToken()){
+    document.getElementById('navSignIn').style.display='none';
+    document.getElementById('navStart').textContent='Dashboard ⚡';
+    document.getElementById('navStart').onclick=function(){switchTab('dashboard',null)};
+  }
+});
+</script>
+</body>
+</html>
