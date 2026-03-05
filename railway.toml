@@ -1,2 +1,0 @@
-[deploy]
-startCommand = "node queue/worker.js"
