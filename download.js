@@ -1,60 +1,107 @@
-const { execSync, exec } = require('child_process');
+const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+
 const DOWNLOAD_DIR = '/tmp/clipspeed/downloads';
-/**
- * Downloads a YouTube video using yt-dlp
- * Returns path to downloaded .mp4 file and video metadata
- */
+
+// Auto-update yt-dlp once per process lifetime so Railway never runs stale version
+let _ytdlpUpdated = false;
+function ensureYtdlpFresh() {
+  if (_ytdlpUpdated) return;
+  try {
+    console.log('🔄 Updating yt-dlp to latest...');
+    execSync('pip3 install --break-system-packages --upgrade yt-dlp', {
+      timeout: 60000, stdio: 'pipe'
+    });
+    console.log('✅ yt-dlp updated');
+  } catch (e) {
+    console.warn('⚠️ yt-dlp update failed (continuing anyway):', e.message?.slice(0, 100));
+  }
+  _ytdlpUpdated = true;
+}
+
 async function downloadVideo(videoUrl) {
-  // Ensure download directory exists
   fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
-  
-  // Extract video ID for filename
+
   const videoId = extractVideoId(videoUrl);
   if (!videoId) throw new Error('Invalid YouTube URL');
+
   const outputPath = path.join(DOWNLOAD_DIR, `${videoId}.mp4`);
-  const metaPath = path.join(DOWNLOAD_DIR, `${videoId}.info.json`);
-  // Skip download if file already exists (cache)
-  if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0) {
-    console.log(`⚡ Video already cached: ${videoId}`);
+  const metaPath   = path.join(DOWNLOAD_DIR, `${videoId}.info.json`);
+
+  // Cache hit
+  if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 100000) {
+    console.log(`⚡ Cache hit: ${videoId}`);
   } else {
-    console.log(`📥 Downloading video: ${videoUrl}`);
-    
-    // yt-dlp command with web player client to avoid JS runtime requirement
-    const cmd = [
-      'yt-dlp',
-      '--extractor-args', '"youtube:player_client=web,mediaconnect"',
-      '-f', '"bv*[height<=1080]+ba/b[height<=1080]"',
-      '--merge-output-format', 'mp4',
+    // Clean any partial file
+    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+
+    // Always run with latest yt-dlp
+    ensureYtdlpFresh();
+
+    const baseFlags = [
+      '--merge-output-format mp4',
       '--write-info-json',
       '--no-playlist',
-      '--max-filesize', '500M',
-      '--socket-timeout', '30',
-      '--retries', '3',
-      '-o', outputPath,
-      `"${videoUrl}"`
+      '--max-filesize 500M',
+      '--socket-timeout 30',
+      '--retries 5',
+      '--fragment-retries 5',
+      `--output "${outputPath}"`,
     ].join(' ');
-    try {
-      execSync(cmd, { 
-        timeout: 300000, // 5 min timeout
-        stdio: 'pipe',
-        shell: true 
-      });
-    } catch (err) {
-      // Clean up partial download
-      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-      throw new Error(`Download failed: ${err.message}`);
+
+    // 4 methods, each trying a different client/format strategy
+    const methods = [
+      // Method 1 — iOS client (most reliable, bypasses bot check)
+      {
+        label: 'ios client',
+        cmd: `yt-dlp --extractor-args "youtube:player_client=ios" -f "best[height<=720][ext=mp4]/best[height<=720]/best" ${baseFlags} "${videoUrl}"`,
+      },
+      // Method 2 — android client
+      {
+        label: 'android client',
+        cmd: `yt-dlp --extractor-args "youtube:player_client=android" -f "best[height<=720][ext=mp4]/best[height<=720]/best" ${baseFlags} "${videoUrl}"`,
+      },
+      // Method 3 — mweb client with age-gate bypass
+      {
+        label: 'mweb client',
+        cmd: `yt-dlp --extractor-args "youtube:player_client=mweb" -f "best[height<=480][ext=mp4]/best[height<=480]/worst" ${baseFlags} "${videoUrl}"`,
+      },
+      // Method 4 — tv_embedded client, lowest quality, last resort
+      {
+        label: 'tv_embedded fallback',
+        cmd: `yt-dlp --extractor-args "youtube:player_client=tv_embedded" -f "worst[ext=mp4]/worst" --no-write-info-json --socket-timeout 60 --retries 10 --output "${outputPath}" "${videoUrl}"`,
+      },
+    ];
+
+    let succeeded = false;
+    for (const method of methods) {
+      try {
+        console.log(`📥 Trying ${method.label}...`);
+        execSync(method.cmd, { timeout: 300000, stdio: 'pipe', shell: true });
+        if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 10000) {
+          console.log(`✅ Downloaded via ${method.label}`);
+          succeeded = true;
+          break;
+        }
+      } catch (err) {
+        console.warn(`⚠️ ${method.label} failed:`, err.message?.slice(0, 120));
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      }
+    }
+
+    if (!succeeded) {
+      throw new Error('All download methods failed — YouTube may be blocking this IP. Try adding cookies.');
     }
   }
+
   // Read metadata
   let metadata = {};
   if (fs.existsSync(metaPath)) {
-    try {
-      metadata = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-    } catch (e) { /* ignore parse errors */ }
+    try { metadata = JSON.parse(fs.readFileSync(metaPath, 'utf-8')); } catch (e) {}
   }
-  // Get video duration using ffprobe
+
+  // Get duration via ffprobe
   let duration = 0;
   try {
     const probe = execSync(
@@ -62,19 +109,20 @@ async function downloadVideo(videoUrl) {
       { encoding: 'utf-8', timeout: 10000 }
     ).trim();
     duration = parseFloat(probe) || 0;
-  } catch (e) { /* ignore */ }
-  const fileSize = fs.statSync(outputPath).size;
+  } catch (e) {}
+
   return {
     videoPath: outputPath,
     videoId,
-    title: metadata.title || 'Unknown Title',
-    uploader: metadata.uploader || metadata.channel || 'Unknown',
-    duration, // in seconds
+    title:     metadata.title    || 'Unknown Title',
+    uploader:  metadata.uploader || metadata.channel || 'Unknown',
+    duration,
     durationFormatted: formatDuration(duration),
-    fileSize,
+    fileSize:  fs.statSync(outputPath).size,
     thumbnail: metadata.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
   };
 }
+
 function extractVideoId(url) {
   const patterns = [
     /(?:v=|\/)([\w-]{11})(?:\?|&|$)/,
@@ -87,19 +135,17 @@ function extractVideoId(url) {
   }
   return null;
 }
-function formatDuration(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${String(s).padStart(2, '0')}`;
+
+function formatDuration(s) {
+  const m = Math.floor(s / 60);
+  return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 }
-/**
- * Clean up downloaded video file
- */
+
 function cleanupVideo(videoId) {
-  const files = [
+  [
     path.join(DOWNLOAD_DIR, `${videoId}.mp4`),
     path.join(DOWNLOAD_DIR, `${videoId}.info.json`),
-  ];
-  files.forEach(f => { try { fs.unlinkSync(f); } catch (e) {} });
+  ].forEach(f => { try { fs.unlinkSync(f); } catch (e) {} });
 }
+
 module.exports = { downloadVideo, extractVideoId, cleanupVideo };
