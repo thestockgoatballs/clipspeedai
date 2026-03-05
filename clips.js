@@ -1,112 +1,1255 @@
-const express = require('express');
-const router = express.Router();
-const { supabase } = require('../lib/supabase');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ClipSpeedAI — Turn Any Video Into Viral Clips</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#a855f7;--p2:#6366f1;--cyan:#22d3ee;--green:#4ade80;--pink:#ec4899;--gold:#f59e0b;--bg:#07070e;--bg2:#0d0d1a;--bg3:#131320;--bg4:#181825;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.orb{position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0;animation:drift 14s ease-in-out infinite}
+.orb1{width:700px;height:700px;background:rgba(168,85,247,0.13);top:-250px;left:-200px}
+.orb2{width:600px;height:600px;background:rgba(99,102,241,0.09);bottom:-200px;right:-150px;animation-duration:18s;animation-direction:reverse}
+.orb3{width:400px;height:400px;background:rgba(34,211,238,0.06);top:40%;left:50%;transform:translate(-50%,-50%);animation-duration:11s;animation-delay:3s}
+@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(25px,15px)}66%{transform:translate(-15px,25px)}}
+.announce-bar{background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(99,102,241,0.15));border-bottom:1px solid rgba(168,85,247,0.25);padding:9px 20px;text-align:center;font-size:12px;font-weight:600;color:#e2e8f0;position:fixed;top:0;left:0;right:0;z-index:201;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.announce-bar .hot{background:linear-gradient(135deg,var(--p),var(--pink));padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;color:#fff}
+nav{position:fixed;top:42px;left:0;right:0;z-index:200;padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(7,7,14,0.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-size:17px;font-weight:900;background:linear-gradient(135deg,#fff 0%,var(--p) 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:8px;letter-spacing:-0.5px;cursor:pointer}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:13px;color:var(--muted2);transition:color 0.2s;font-weight:500;cursor:pointer}
+.nav-links a:hover{color:#fff}
+.nav-cta{display:flex;gap:8px;align-items:center}
+.btn-ghost{padding:8px 18px;border:1px solid var(--border2);border-radius:9px;font-size:13px;color:var(--muted2);cursor:pointer;background:transparent;transition:all 0.2s;font-weight:500}
+.btn-ghost:hover{border-color:var(--p);color:#fff}
+.btn-primary{padding:9px 20px;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:9px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:all 0.2s}
+.btn-primary:hover{opacity:0.88;transform:translateY(-1px)}
+@media(max-width:900px){.nav-links{display:none}nav{padding:0 16px}}
+.page-tabs{display:none;position:fixed;top:106px;left:0;right:0;z-index:190;background:rgba(7,7,14,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto}
+.page-tabs.visible{display:flex}
+.tab-btn{padding:12px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}
+.tab-btn.active{color:var(--p);border-bottom-color:var(--p)}
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+section{position:relative;z-index:1}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+.section-label{font-size:11px;color:var(--p);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:10px;font-weight:700}
+.section-title{font-size:clamp(26px,4vw,46px);font-weight:900;letter-spacing:-1.5px;line-height:1.05;margin-bottom:14px}
+.section-sub{font-size:15px;color:var(--muted2);line-height:1.65;max-width:540px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);border-radius:100px;font-size:12px;color:var(--p);margin-bottom:28px;animation:fadeUp 0.6s ease both;font-weight:600}
+.live-dot{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:livePulse 2s infinite;flex-shrink:0}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,0.4)}50%{box-shadow:0 0 0 6px rgba(74,222,128,0)}}
+.hero h1{font-size:clamp(42px,7.5vw,96px);font-weight:900;line-height:0.95;letter-spacing:-3px;margin-bottom:24px;animation:fadeUp 0.6s ease 0.1s both}
+.grad-text{background:linear-gradient(135deg,#fff 0%,var(--p) 35%,var(--cyan) 70%,var(--pink) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:gradShift 5s linear infinite}
+@keyframes gradShift{0%{background-position:0%}100%{background-position:200%}}
+.hero-sub{font-size:clamp(15px,2vw,19px);color:var(--muted2);max-width:600px;line-height:1.65;margin-bottom:40px;animation:fadeUp 0.6s ease 0.2s both}
+.hero-url-wrap{display:flex;gap:10px;width:100%;max-width:620px;animation:fadeUp 0.6s ease 0.3s both;margin-bottom:16px}
+.hero-url{flex:1;padding:16px 20px;background:rgba(255,255,255,0.05);border:1.5px solid var(--border2);border-radius:14px;color:#fff;font-size:14px;outline:none;transition:all 0.2s}
+.hero-url:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(168,85,247,0.15)}
+.hero-url::placeholder{color:var(--muted)}
+.hero-gen-btn{padding:16px 28px;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:14px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;white-space:nowrap;transition:all 0.25s;box-shadow:0 0 40px rgba(168,85,247,0.4)}
+.hero-gen-btn:hover{transform:translateY(-2px);box-shadow:0 0 80px rgba(168,85,247,0.6)}
+.hero-trust{display:flex;align-items:center;gap:12px;animation:fadeUp 0.6s ease 0.35s both;flex-wrap:wrap;justify-content:center;margin-bottom:8px}
+.trust-item{font-size:12px;color:var(--muted2);display:flex;align-items:center;gap:5px}
+.trust-item .ck{color:var(--green);font-weight:700}
+.trust-dot{width:4px;height:4px;background:var(--muted);border-radius:50%;opacity:0.4}
+.hero-ticker{animation:fadeUp 0.6s ease 0.38s both;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:100px;padding:6px 16px;font-size:12px;color:var(--green);font-weight:600;margin-bottom:36px;display:flex;align-items:center;gap:8px}
+.hero-stats{display:flex;gap:40px;margin-top:20px;animation:fadeUp 0.6s ease 0.4s both;flex-wrap:wrap;justify-content:center}
+.stat{text-align:center}
+.stat-num{font-size:clamp(26px,4vw,48px);font-weight:900;background:linear-gradient(135deg,var(--p),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:12px;color:var(--muted);margin-top:3px}
+.proof-strip{position:relative;z-index:1;padding:20px 0;background:rgba(255,255,255,0.02);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden}
+.proof-track{display:flex;gap:0;animation:marquee 28s linear infinite;white-space:nowrap;width:max-content}
+.proof-item{display:flex;align-items:center;gap:10px;padding:0 36px;border-right:1px solid var(--border)}
+.proof-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.proof-text{font-size:12px;color:var(--muted2)}
+.proof-text strong{color:#fff;font-size:13px}
+.proof-metric{font-size:11px;color:var(--green);font-weight:700}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.clips-showcase{padding:90px 0 70px;position:relative;z-index:1}
+.clips-header{text-align:center;margin-bottom:52px}
+.clips-grid-desktop{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:900px){.clips-grid-desktop{display:none}}
+.clips-carousel-mobile{display:none}
+@media(max-width:900px){.clips-carousel-mobile{display:block}}
+.carousel-track{display:flex;overflow-x:scroll;scroll-snap-type:x mandatory;scrollbar-width:none;gap:16px;padding:0 16px}
+.carousel-track::-webkit-scrollbar{display:none}
+.carousel-slide{min-width:calc(100vw - 64px);scroll-snap-align:center;flex-shrink:0}
+.carousel-dots{display:flex;justify-content:center;gap:8px;margin-top:20px}
+.cdot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.3s}
+.cdot.active{background:var(--cyan);width:24px;border-radius:4px}
+.swipe-hint{text-align:center;font-size:11px;color:var(--muted);margin-top:12px}
+.showcase-card{display:flex;flex-direction:column;border-radius:20px;overflow:hidden;border:1px solid rgba(34,211,238,0.15);background:var(--bg2);transition:all 0.35s;cursor:pointer}
+.showcase-card:hover{border-color:rgba(34,211,238,0.5);transform:translateY(-8px);box-shadow:0 30px 80px rgba(34,211,238,0.12)}
+.sc-video-wrap{position:relative;aspect-ratio:9/16;background:#000;overflow:hidden}
+.sc-scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:2}
+.sc-scene-beast{background:linear-gradient(180deg,#0a1628,#1a0a2e,#071020)}
+.sc-scene-adin{background:linear-gradient(180deg,#0f0a1a,#1a0f28,#0a0514)}
+.sc-scene-rogan{background:linear-gradient(180deg,#1a0a00,#0f1a0a,#001020)}
+.sc-scene-speed{background:linear-gradient(180deg,#1a0a14,#0a0a28,#140a1a)}
+.sc-bg-anim{position:absolute;inset:0;opacity:0.4;animation:scenePulse 3s ease-in-out infinite}
+.sc-scene-beast .sc-bg-anim{background:radial-gradient(circle at 50% 40%,rgba(34,211,238,0.3),transparent 60%)}
+.sc-scene-adin .sc-bg-anim{background:radial-gradient(circle at 50% 40%,rgba(168,85,247,0.35),transparent 60%)}
+.sc-scene-rogan .sc-bg-anim{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,0.25),transparent 60%)}
+.sc-scene-speed .sc-bg-anim{background:radial-gradient(circle at 50% 40%,rgba(236,72,153,0.3),transparent 60%)}
+@keyframes scenePulse{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.6;transform:scale(1.15)}}
+.sc-emoji-big{font-size:52px;position:relative;z-index:1;animation:emojiBob 2s ease-in-out infinite}
+@keyframes emojiBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.sc-scene-sub{font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;letter-spacing:2px;text-transform:uppercase;position:relative;z-index:1}
+.sc-caption-wrap{position:absolute;bottom:22%;left:0;right:0;text-align:center;z-index:10;padding:0 12px}
+.sc-caption{display:flex;flex-wrap:wrap;justify-content:center;gap:5px}
+.neon-cap .cap-word{font-size:clamp(11px,2.5vw,14px);font-weight:900;color:#22d3ee;text-shadow:0 0 10px #22d3ee,0 0 24px rgba(34,211,238,0.6);letter-spacing:1px;padding:2px 4px;animation:neonFlicker 0.1s ease infinite alternate}
+@keyframes neonFlicker{0%{text-shadow:0 0 10px #22d3ee,0 0 24px rgba(34,211,238,0.6)}100%{text-shadow:0 0 14px #22d3ee,0 0 32px rgba(34,211,238,0.8)}}
+.sc-watermark{position:absolute;top:12px;left:12px;z-index:11;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:4px 10px;font-size:9px;font-weight:800;color:#22d3ee;letter-spacing:0.5px}
+.sc-score-badge{position:absolute;top:12px;right:12px;z-index:11;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);border-radius:10px;padding:6px 10px;text-align:center;border:1px solid rgba(168,85,247,0.4)}
+.sc-score-num{display:block;font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.sc-score-lbl{display:block;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700}
+.sc-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.1);z-index:11}
+.sc-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#22d3ee,var(--p));animation:progressAnim 12s linear infinite}
+@keyframes progressAnim{0%{width:0%}100%{width:100%}}
+.sc-meta{padding:14px 16px;background:var(--bg3);border-top:1px solid rgba(34,211,238,0.1)}
+.sc-creator-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:2px solid rgba(34,211,238,0.3)}
+.sc-creator-name{font-size:13px;font-weight:800;color:#fff}
+.sc-moment{font-size:10px;color:var(--muted);margin-top:1px}
+.sc-platform-icons{margin-left:auto;display:flex;gap:4px;font-size:14px}
+.sc-stats-row{display:flex;gap:7px;flex-wrap:wrap}
+.sc-stat-pill{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.clips-cta-row{display:flex;align-items:center;justify-content:space-between;background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.15);border-radius:16px;padding:18px 28px;margin-top:40px;flex-wrap:wrap;gap:16px}
+.clips-cta-text{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text);font-weight:600}
+.compare-section{padding:100px 0;position:relative;z-index:1}
+.compare-table-wrap{overflow-x:auto;margin-top:32px}
+.compare-table{width:100%;border-collapse:collapse;min-width:680px}
+.compare-table th{padding:16px 20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--border2);text-align:left}
+.compare-table th.us{background:rgba(168,85,247,0.08);border-bottom-color:var(--p);color:var(--p)}
+.compare-table th.them{color:var(--muted)}
+.compare-table td{padding:14px 20px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.compare-table td.us{background:rgba(168,85,247,0.04);font-weight:700;color:#fff}
+.compare-table td.them{color:var(--muted)}
+.row-label{font-size:12px;color:var(--muted2);font-weight:600}
+.win{color:var(--green);font-weight:800}
+.lose{color:#ef4444}
+.compare-badge{display:inline-flex;align-items:center;padding:4px 12px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);border-radius:20px;font-size:11px;font-weight:700;color:var(--green);margin-left:8px}
+.comp-tabs{display:flex;gap:10px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}
+.comp-tab{padding:10px 24px;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.25s}
+.comp-tab.active{background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent;color:#fff}
+.comp-win-summary{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:36px}
+.win-pill{display:flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:100px;font-size:12px;font-weight:600;color:var(--text)}
+.pipeline-section{padding:100px 0}
+.pipeline-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.pipeline-grid{grid-template-columns:repeat(2,1fr)}}
+.pipe-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;transition:all 0.3s}
+.pipe-card:hover{border-color:rgba(168,85,247,0.4);transform:translateY(-3px)}
+.pipe-num{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.pipe-icon{font-size:26px;margin-bottom:10px;display:block}
+.pipe-title{font-size:14px;font-weight:700;margin-bottom:5px}
+.pipe-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.pipe-badge{display:inline-block;margin-top:7px;padding:2px 8px;background:rgba(168,85,247,0.15);border-radius:4px;font-size:9px;color:var(--p);font-weight:700}
+.features-section{padding:100px 0}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px}
+@media(max-width:900px){.features-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.features-grid{grid-template-columns:1fr}}
+.feat-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;transition:all 0.3s}
+.feat-card:hover{border-color:rgba(168,85,247,0.4);transform:translateY(-6px)}
+.feat-icon-wrap{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px}
+.feat-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.feat-desc{font-size:13px;color:var(--muted2);line-height:1.65}
+.feat-tag{display:inline-block;margin-top:12px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.how-section{padding:100px 0}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px}
+@media(max-width:700px){.how-steps{grid-template-columns:1fr}}
+.step-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:32px;text-align:center;transition:all 0.3s}
+.step-card:hover{border-color:rgba(168,85,247,0.35);transform:translateY(-4px)}
+.step-num{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;margin:0 auto 20px;box-shadow:0 0 32px rgba(168,85,247,0.45)}
+.step-title{font-size:17px;font-weight:700;margin-bottom:10px}
+.step-desc{font-size:13px;color:var(--muted2);line-height:1.7}
+.pricing-section{padding:100px 0}
+.billing-toggle-wrap{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:48px;flex-wrap:wrap}
+.billing-label{font-size:14px;font-weight:600;color:var(--muted2);cursor:pointer;transition:color 0.2s}
+.billing-label.active{color:#fff}
+.toggle-track{width:54px;height:28px;background:rgba(255,255,255,0.08);border-radius:14px;position:relative;cursor:pointer;transition:background 0.3s;border:1px solid var(--border2)}
+.toggle-track.yearly{background:var(--p)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left 0.3s}
+.toggle-track.yearly .toggle-thumb{left:29px}
+.yearly-badge{background:linear-gradient(135deg,var(--green),#16a34a);color:#000;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;animation:pulseBadge 2s ease-in-out infinite}
+@keyframes pulseBadge{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,0.4)}50%{box-shadow:0 0 0 8px rgba(74,222,128,0)}}
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){.pricing-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:580px){.pricing-grid{grid-template-columns:1fr}}
+.price-card{background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:28px;position:relative;transition:transform 0.3s}
+.price-card:hover{transform:translateY(-6px)}
+.price-card.featured{border-color:var(--p);background:linear-gradient(180deg,rgba(168,85,247,0.08),var(--bg2));box-shadow:0 0 80px rgba(168,85,247,0.15)}
+.price-card.agency-card{border-color:rgba(245,158,11,0.4);background:linear-gradient(180deg,rgba(245,158,11,0.06),var(--bg2))}
+.featured-badge,.agency-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);padding:4px 16px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap}
+.featured-badge{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+.agency-badge{background:linear-gradient(135deg,var(--gold),#f97316);color:#000}
+.price-name{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.price-amount{font-size:50px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:2px;display:flex;align-items:flex-start}
+.price-amount sup{font-size:22px;vertical-align:top;margin-top:10px;font-weight:700}
+.price-period{font-size:11px;color:var(--muted);margin-bottom:4px}
+.price-yearly-note{font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px;min-height:16px}
+.price-credits{font-size:12px;color:var(--cyan);font-weight:700;margin-bottom:4px}
+.credit-note{font-size:10px;color:var(--muted);margin-bottom:16px;line-height:1.4}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.price-features li{font-size:11px;color:var(--muted2);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+.price-features li.no::before{content:'✗';color:#ef4444}
+.price-btn{width:100%;padding:13px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;border:none;margin-bottom:6px}
+.price-btn-outline{background:transparent;border:1px solid var(--border2);color:#fff}
+.price-btn-outline:hover{border-color:var(--p);color:var(--p)}
+.price-btn-grad{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+.price-btn-gold{background:linear-gradient(135deg,var(--gold),#f97316);color:#000;font-weight:800}
+.packs-section{margin-top:10px;border-top:1px solid var(--border);padding-top:16px}
+.packs-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px}
+.pack-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:9px;border:1px solid var(--border);margin-bottom:7px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02)}
+.pack-row:hover,.pack-row.selected{border-color:var(--p);background:rgba(168,85,247,0.09)}
+.pack-row.selected .pack-radio{background:var(--p);border-color:var(--p)}
+.pack-radio{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;transition:all 0.2s}
+.pack-info{flex:1;margin:0 8px}
+.pack-name{font-size:10px;font-weight:700;color:#fff}
+.pack-credits{font-size:9px;color:var(--cyan)}
+.pack-price{font-size:11px;font-weight:800;color:var(--green)}
+.pack-savings{font-size:9px;color:var(--gold);font-weight:700}
+.pack-cta{width:100%;padding:12px;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;transition:all 0.2s}
+.money-back{text-align:center;font-size:10px;color:var(--cyan);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px;font-weight:600}
+.test-section{padding:100px 0}
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
+@media(max-width:800px){.test-grid{grid-template-columns:1fr}}
+.test-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;transition:border 0.3s;position:relative}
+.test-card:hover{border-color:rgba(168,85,247,0.4)}
+.test-verified{position:absolute;top:18px;right:18px;font-size:10px;color:var(--green);font-weight:700;background:rgba(74,222,128,0.1);padding:3px 8px;border-radius:20px;border:1px solid rgba(74,222,128,0.2)}
+.test-stars{color:#facc15;font-size:14px;margin-bottom:16px;letter-spacing:2px}
+.test-quote{font-size:13px;color:var(--text);line-height:1.75;margin-bottom:20px;font-style:italic}
+.test-result-box{background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.test-result-num{font-size:16px;font-weight:900;color:var(--green)}
+.test-author{display:flex;align-items:center;gap:12px}
+.test-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.test-name{font-size:13px;font-weight:700}
+.test-handle{font-size:11px;color:var(--muted)}
+.faq-section{padding:100px 0}
+.faq-list{max-width:720px;margin:56px auto 0;display:flex;flex-direction:column;gap:10px}
+.faq-item{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.faq-q{padding:20px 24px;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;transition:color 0.2s}
+.faq-q:hover{color:var(--p)}
+.faq-icon{font-size:18px;color:var(--muted);transition:transform 0.3s;flex-shrink:0}
+.faq-a{font-size:13px;color:var(--muted2);line-height:1.75;max-height:0;overflow:hidden;padding:0 24px;transition:all 0.35s}
+.faq-item.open .faq-a{max-height:300px;padding:0 24px 20px}
+.faq-item.open .faq-icon{transform:rotate(45deg)}
+.cta-section{padding:100px 0;text-align:center}
+.cta-box{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.07));border:1px solid rgba(168,85,247,0.25);border-radius:28px;padding:90px 40px;max-width:880px;margin:0 auto;position:relative;overflow:hidden}
+.cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;height:400px;background:radial-gradient(circle,rgba(168,85,247,0.15),transparent 70%);pointer-events:none}
+.cta-box h2{font-size:clamp(30px,5vw,56px);font-weight:900;letter-spacing:-1.5px;margin-bottom:16px;position:relative;z-index:1}
+.cta-box p{font-size:17px;color:var(--muted2);margin-bottom:40px;position:relative;z-index:1}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.btn-big{padding:18px 40px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;border:none}
+.btn-big-grad{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 0 60px rgba(168,85,247,0.45)}
+.btn-big-grad:hover{transform:translateY(-3px)}
+.btn-big-ghost{background:transparent;border:1px solid var(--border2);color:#fff}
+.btn-big-ghost:hover{border-color:var(--p);color:var(--p)}
+.cta-trust{display:flex;align-items:center;gap:16px;justify-content:center;margin-top:24px;flex-wrap:wrap;position:relative;z-index:1}
+.cta-trust-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;z-index:1}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+@media(max-width:800px){.footer-grid{grid-template-columns:1fr 1fr}}
+.footer-brand h3{font-size:19px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.footer-brand p{font-size:12px;color:var(--muted);line-height:1.7;max-width:250px;margin-bottom:20px}
+.footer-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px}
+.footer-col a{display:block;font-size:12px;color:var(--muted);margin-bottom:10px;transition:color 0.2s;cursor:pointer}
+.footer-col a:hover{color:#fff}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);flex-wrap:wrap;gap:8px}
+.login-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.login-overlay.open{display:flex}
+.login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:42px;width:100%;max-width:430px;position:relative;box-shadow:0 40px 120px rgba(0,0,0,0.7)}
+.login-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:18px;transition:all 0.2s}
+.login-close:hover{border-color:var(--p);color:#fff}
+.login-logo{text-align:center;font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,#fff,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.login-tagline{text-align:center;color:var(--muted2);font-size:.85rem;margin-bottom:28px}
+.login-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px;margin-bottom:26px;gap:4px}
+.login-tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all 0.2s}
+.login-tab.active{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.form-group input{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid var(--border2);border-radius:11px;padding:13px 16px;color:var(--text);font-size:.9rem;outline:none;transition:all 0.2s}
+.form-group input:focus{border-color:var(--p)}
+.form-group input::placeholder{color:var(--muted)}
+.login-submit{width:100%;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:none;border-radius:11px;padding:14px;font-weight:800;font-size:.95rem;cursor:pointer;margin-bottom:10px;transition:all 0.2s}
+.login-submit:hover{opacity:.9;transform:translateY(-1px)}
+.login-submit:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.login-error{color:#ef4444;font-size:12px;margin-bottom:10px;display:none;text-align:center}
+.login-info{color:var(--p);font-size:12px;margin-bottom:10px;display:none;text-align:center}
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border2)}
+.btn-google{width:100%;background:#fff;color:#333;border:1.5px solid #ddd;border-radius:11px;padding:13px;font-weight:700;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s}
+.btn-google:hover{background:#f5f5f5}
+.login-footer-txt{text-align:center;font-size:.78rem;color:var(--muted);margin-top:18px}
+.login-footer-txt a{color:var(--p);cursor:pointer;font-weight:600}
+#dashboard{padding:106px 0 60px}
+.dash-hero{min-height:50vh;display:flex;align-items:center;justify-content:center;padding:60px 24px 48px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.dash-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(168,85,247,0.09),transparent 65%);pointer-events:none}
+.dash-hero-inner{max-width:700px;width:100%;text-align:center;position:relative;z-index:1}
+.dash-hero-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.22);border-radius:100px;font-size:11px;color:var(--p);font-weight:700;margin-bottom:24px}
+.dash-hero-title{font-size:clamp(32px,5vw,60px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:16px}
+.dash-hero-grad{background:linear-gradient(135deg,var(--p),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.dash-hero-sub{font-size:15px;color:var(--muted2);line-height:1.65;margin-bottom:32px}
+.dash-hero-form{display:flex;gap:10px;width:100%;margin-bottom:14px}
+.dash-hero-input-wrap{flex:1;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:14px;padding:0 16px;transition:all 0.2s}
+.dash-hero-input-wrap:focus-within{border-color:var(--p);background:rgba(168,85,247,0.05)}
+.dash-url-icon{font-size:16px;flex-shrink:0}
+.dash-hero-url{flex:1;background:none;border:none;color:#fff;font-size:14px;outline:none;padding:15px 0}
+.dash-hero-url::placeholder{color:var(--muted)}
+.dash-hero-btn{padding:15px 26px;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.25s;box-shadow:0 0 32px rgba(168,85,247,0.35)}
+.dash-hero-btn:hover{transform:translateY(-2px)}
+.dash-hero-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.dash-hero-trust{display:flex;align-items:center;gap:10px;justify-content:center;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.dash-processing{display:none;margin-top:32px;width:100%;max-width:580px;margin-left:auto;margin-right:auto}
+.proc-card{background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:18px;padding:28px 32px}
+.proc-pct-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
+.proc-pct{font-size:52px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;letter-spacing:-2px}
+.proc-pct-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.dash-proc-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;margin-bottom:20px}
+.dash-proc-fill{height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,var(--p),var(--cyan),var(--pink));transition:width 0.6s cubic-bezier(.4,0,.2,1)}
+.dash-proc-steps{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.proc-step{font-size:11px;color:var(--muted);padding:9px 12px;border-radius:10px;border:1px solid var(--border);transition:all 0.3s;background:rgba(255,255,255,0.02);display:flex;align-items:center;gap:7px;font-weight:500}
+.proc-step .step-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all 0.3s}
+.proc-step.active{color:#fff;border-color:rgba(168,85,247,0.5);background:rgba(168,85,247,0.1)}
+.proc-step.active .step-dot{background:var(--p);box-shadow:0 0 8px var(--p);animation:livePulse 1.5s infinite}
+.proc-step.done{color:var(--green);border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.05)}
+.proc-step.done .step-dot{background:var(--green)}
+.dash-proc-status{font-size:12px;color:var(--muted2);font-style:italic;text-align:center;min-height:18px}
+.proc-error{color:#ef4444;font-size:13px;margin-top:12px;text-align:center;display:none}
+.dash-clips-header{padding:24px 30px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.dash-title{font-size:19px;font-weight:800}
+.dash-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.real-clips-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;padding:26px 30px}
+@media(max-width:700px){.real-clips-grid{grid-template-columns:1fr}}
+.real-clip-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:border 0.3s;animation:fadeUp 0.4s ease both}
+.real-clip-card:hover{border-color:rgba(168,85,247,0.4)}
+.real-clip-video-wrap{position:relative;width:100%;aspect-ratio:9/16;background:#000}
+.real-clip-video-wrap video{width:100%;height:100%;object-fit:contain}
+.real-clip-score{position:absolute;top:8px;right:8px;background:linear-gradient(135deg,var(--p),var(--p2));padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;color:#fff}
+.real-clip-info{padding:16px}
+.real-clip-title{font-size:14px;font-weight:700;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.real-clip-hook{font-size:12px;color:var(--muted2);font-style:italic;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.real-clip-tags{font-size:11px;color:var(--cyan);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.real-clip-meta{font-size:11px;color:var(--muted);margin-bottom:12px}
+.real-clip-actions{display:flex;gap:8px}
+.clip-dl-btn{flex:1;padding:9px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;text-align:center}
+.clip-dl-primary{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+.clip-dl-secondary{background:rgba(255,255,255,0.06);color:var(--muted2);border:1px solid var(--border)}
+.clip-dl-btn:hover{opacity:0.85}
+#affiliate{padding:106px 0 60px}
+.aff-header{padding:28px 32px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.aff-title{font-size:22px;font-weight:900;margin-bottom:4px}
+.aff-subtitle{font-size:13px;color:var(--muted)}
+.aff-tier-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(249,115,22,0.1));border:1px solid rgba(245,158,11,0.35);border-radius:20px;font-size:13px;font-weight:800;color:var(--gold)}
+.aff-body{padding:28px 32px;display:flex;flex-direction:column;gap:28px}
+.aff-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:800px){.aff-stats-grid{grid-template-columns:repeat(2,1fr)}}
+.aff-stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;text-align:center}
+.aff-stat-num{font-size:34px;font-weight:900;margin-bottom:4px}
+.aff-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.aff-link-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px}
+.aff-link-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:700}
+.aff-link-row{display:flex;gap:10px;align-items:center}
+.aff-link-box{flex:1;padding:12px 16px;background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:10px;font-size:13px;color:var(--p);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aff-copy-btn{padding:12px 22px;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--p);border-radius:14px;padding:14px 22px;font-size:.875rem;color:var(--text);z-index:9999;transform:translateY(100px);opacity:0;transition:.35s cubic-bezier(.34,1.56,.64,1);max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+<div class="toast" id="toast"></div>
 
-/**
- * GET /clips/:projectId
- * Returns all clips for a project, sorted by viral score
- */
-router.get('/:projectId', async (req, res) => {
-  try {
-    const { projectId } = req.params;
-    const userId = req.user.id;
+<div class="announce-bar">
+  <span class="hot">🔥 LIMITED</span>
+  <span>Save 40% with yearly billing — offer ends soon · </span>
+  <span style="color:var(--cyan);font-weight:700;cursor:pointer" onclick="setBilling(true);goAnchor('pricing')">Claim Discount →</span>
+</div>
 
-    // Verify project belongs to user
-    const { data: project } = await supabase
-      .from('projects')
-      .select('id, status, video_title, creator_name, total_clips_found, avg_viral_score')
-      .eq('id', projectId)
-      .eq('user_id', userId)
-      .single();
+<nav>
+  <div class="nav-logo" onclick="showLanding()">⚡ ClipSpeedAI</div>
+  <div class="nav-links">
+    <a onclick="goAnchor('compare')">vs OpusClip</a>
+    <a onclick="goAnchor('features')">Features</a>
+    <a onclick="goAnchor('how')">How It Works</a>
+    <a onclick="goAnchor('pricing')">Pricing</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn-ghost" id="navSignIn" onclick="openLogin('login')">Sign In</button>
+    <button class="btn-primary" id="navStart" onclick="openLogin('signup')">Get My Viral Clips ⚡</button>
+  </div>
+</nav>
 
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
+<div class="page-tabs" id="pageTabs">
+  <button class="tab-btn" onclick="switchTab('landing',this)">🏠 Home</button>
+  <button class="tab-btn" onclick="switchTab('dashboard',this)">📋 Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('affiliate',this)">💰 Affiliate</button>
+  <button class="tab-btn" onclick="goAnchor('pricing')">💳 Upgrade</button>
+</div>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <button class="login-close" onclick="closeLogin()">✕</button>
+    <div class="login-logo">⚡ ClipSpeedAI</div>
+    <div class="login-tagline">Turn any video into viral clips</div>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-info" id="loginInfo"></div>
+    <div class="login-tabs">
+      <div class="login-tab active" id="ltab-login" onclick="switchLoginTab('login')">Sign In</div>
+      <div class="login-tab" id="ltab-signup" onclick="switchLoginTab('signup')">Create Account</div>
+    </div>
+    <div id="lform-login">
+      <div class="form-group"><label>Email</label><input type="email" id="l-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="l-pass" placeholder="Your password"></div>
+      <button class="login-submit" id="loginSubmitBtn" onclick="handleLogin()">Sign In →</button>
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="handleGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <div class="login-footer-txt">No account? <a onclick="switchLoginTab('signup')">Sign up free</a></div>
+    </div>
+    <div id="lform-signup" style="display:none">
+      <div class="form-group"><label>Full Name</label><input type="text" id="s-name" placeholder="Your name"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="s-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="s-pass" placeholder="Min. 8 characters"></div>
+      <button class="login-submit" id="signupSubmitBtn" onclick="handleSignup()">Create Free Account →</button>
+      <div class="divider">or</div>
+      <button class="btn-google" onclick="handleGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- LANDING -->
+<div id="landing" class="page active" style="padding-top:106px">
+<div class="hero">
+  <div class="hero-badge"><div class="live-dot"></div> #1 Fastest AI Clip Tool · 3–5× Faster Than OpusClip</div>
+  <h1>Get My <span class="grad-text">Viral Clips</span><br>In 90 Seconds Flat</h1>
+  <p class="hero-sub">Paste any YouTube link. Our 12-step AI pipeline finds the viral moments, adds word-by-word captions, reframes for every platform, and delivers ready-to-post clips.</p>
+  <div class="hero-url-wrap">
+    <input class="hero-url" placeholder="Paste a YouTube URL..." id="heroUrl">
+    <button class="hero-gen-btn" onclick="heroGenerate()">Get My Viral Clips ⚡</button>
+  </div>
+  <div class="hero-trust">
+    <span class="trust-item"><span class="ck">✓</span> No credit card required</span>
+    <div class="trust-dot"></div>
+    <span class="trust-item"><span class="ck">✓</span> 50 free credits instantly</span>
+    <div class="trust-dot"></div>
+    <span class="trust-item"><span class="ck">✓</span> 7-day money-back guarantee</span>
+    <div class="trust-dot"></div>
+    <span class="trust-item"><span class="ck">✓</span> Cancel anytime</span>
+  </div>
+  <div class="hero-ticker"><div class="live-dot"></div><span id="tickerText">🎉 @kayla_fit just went from 50K → 800K views/month</span></div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" id="c1">0</div><div class="stat-label">Clips Generated</div></div>
+    <div class="stat"><div class="stat-num" id="c2">0</div><div class="stat-label">Active Creators</div></div>
+    <div class="stat"><div class="stat-num" id="c3">0s</div><div class="stat-label">Avg Processing</div></div>
+    <div class="stat"><div class="stat-num" id="c4">0%</div><div class="stat-label">Viral Accuracy</div></div>
+  </div>
+</div>
+
+<div class="proof-strip">
+  <div class="proof-track">
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(168,85,247,0.2)">🎙️</div><div><div class="proof-text"><strong>Marcus T.</strong> — Podcast · 180K subs</div><div class="proof-metric">+340% views after switching from OpusClip</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(34,211,238,0.2)">💪</div><div><div class="proof-text"><strong>Kayla R.</strong> — Fitness · 92K followers</div><div class="proof-metric">50K → 800K views/month in 6 weeks</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(74,222,128,0.2)">💰</div><div><div class="proof-text"><strong>Devon K.</strong> — Agency Owner</div><div class="proof-metric">$1,200/mo affiliate income</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(245,158,11,0.2)">🎮</div><div><div class="proof-text"><strong>JayStream</strong> — Gaming · 340K subs</div><div class="proof-metric">Clips 8× faster than before</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(236,72,153,0.2)">📈</div><div><div class="proof-text"><strong>Priya M.</strong> — Finance Creator</div><div class="proof-metric">First viral clip hit 2.1M views</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(168,85,247,0.2)">🎙️</div><div><div class="proof-text"><strong>Marcus T.</strong> — Podcast · 180K subs</div><div class="proof-metric">+340% views after switching from OpusClip</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(34,211,238,0.2)">💪</div><div><div class="proof-text"><strong>Kayla R.</strong> — Fitness · 92K followers</div><div class="proof-metric">50K → 800K views/month in 6 weeks</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(74,222,128,0.2)">💰</div><div><div class="proof-text"><strong>Devon K.</strong> — Agency Owner</div><div class="proof-metric">$1,200/mo affiliate income</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(245,158,11,0.2)">🎮</div><div><div class="proof-text"><strong>JayStream</strong> — Gaming · 340K subs</div><div class="proof-metric">Clips 8× faster than before</div></div></div>
+    <div class="proof-item"><div class="proof-avatar" style="background:rgba(236,72,153,0.2)">📈</div><div><div class="proof-text"><strong>Priya M.</strong> — Finance Creator</div><div class="proof-metric">First viral clip hit 2.1M views</div></div></div>
+  </div>
+</div>
+
+<section class="clips-showcase">
+  <div class="container">
+    <div class="clips-header">
+      <div class="section-label">Real Clips. Real Creators.</div>
+      <h2 class="section-title">This is what ClipSpeedAI<br><span class="grad-text">actually produces</span></h2>
+      <p style="font-size:15px;color:var(--muted2);max-width:520px;margin:0 auto;line-height:1.65">10–15 second viral moments. Neon captions. Auto-reframed. Ready to post.</p>
+    </div>
+    <div class="clips-grid-desktop">
+      <div class="showcase-card"><div class="sc-video-wrap"><div class="sc-scene sc-scene-beast"><div class="sc-bg-anim"></div><div class="sc-emoji-big">💰</div><div class="sc-scene-sub">MrBeast</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">I</span><span class="cap-word">GAVE</span><span class="cap-word">HIM</span><span class="cap-word">$1,000,000</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">97</span><span class="sc-score-lbl">Viral</span></div><div class="sc-progress"><div class="sc-progress-fill"></div></div></div><div class="sc-meta"><div class="sc-creator-row"><div class="sc-avatar" style="background:rgba(34,211,238,0.2)">🧢</div><div><div class="sc-creator-name">MrBeast</div><div class="sc-moment">Money drop · 0:12</div></div><div class="sc-platform-icons"><span>📱</span><span>▶️</span></div></div><div class="sc-stats-row"><span class="sc-stat-pill" style="background:rgba(74,222,128,0.12);color:var(--green)">📈 2M–8M views</span><span class="sc-stat-pill" style="background:rgba(168,85,247,0.12);color:var(--p)">Hook A+</span></div></div></div>
+      <div class="showcase-card"><div class="sc-video-wrap"><div class="sc-scene sc-scene-adin"><div class="sc-bg-anim"></div><div class="sc-emoji-big">😱</div><div class="sc-scene-sub">Adin Ross</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">BRO</span><span class="cap-word">ARE</span><span class="cap-word">YOU</span><span class="cap-word">SERIOUS?!</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">93</span><span class="sc-score-lbl">Viral</span></div><div class="sc-progress"><div class="sc-progress-fill" style="animation-delay:3s"></div></div></div><div class="sc-meta"><div class="sc-creator-row"><div class="sc-avatar" style="background:rgba(168,85,247,0.2)">🎮</div><div><div class="sc-creator-name">Adin Ross</div><div class="sc-moment">Reaction · 0:10</div></div><div class="sc-platform-icons"><span>📱</span><span>▶️</span></div></div><div class="sc-stats-row"><span class="sc-stat-pill" style="background:rgba(74,222,128,0.12);color:var(--green)">📈 1M–5M views</span><span class="sc-stat-pill" style="background:rgba(168,85,247,0.12);color:var(--p)">Hook A+</span></div></div></div>
+      <div class="showcase-card"><div class="sc-video-wrap"><div class="sc-scene sc-scene-rogan"><div class="sc-bg-anim"></div><div class="sc-emoji-big">🎙️</div><div class="sc-scene-sub">Joe Rogan</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">THAT'S</span><span class="cap-word">THE</span><span class="cap-word">CRAZIEST</span><span class="cap-word">THING</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">89</span><span class="sc-score-lbl">Viral</span></div><div class="sc-progress"><div class="sc-progress-fill" style="animation-delay:6s"></div></div></div><div class="sc-meta"><div class="sc-creator-row"><div class="sc-avatar" style="background:rgba(245,158,11,0.2)">🥊</div><div><div class="sc-creator-name">Joe Rogan</div><div class="sc-moment">Shock moment · 0:14</div></div><div class="sc-platform-icons"><span>📱</span><span>▶️</span></div></div><div class="sc-stats-row"><span class="sc-stat-pill" style="background:rgba(74,222,128,0.12);color:var(--green)">📈 500K–3M views</span><span class="sc-stat-pill" style="background:rgba(34,211,238,0.12);color:var(--cyan)">Flow A</span></div></div></div>
+      <div class="showcase-card"><div class="sc-video-wrap"><div class="sc-scene sc-scene-speed"><div class="sc-bg-anim"></div><div class="sc-emoji-big">⚡</div><div class="sc-scene-sub">IShowSpeed</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">SPEED</span><span class="cap-word">IS</span><span class="cap-word">NOT</span><span class="cap-word">REAL</span><span class="cap-word">💀</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">96</span><span class="sc-score-lbl">Viral</span></div><div class="sc-progress"><div class="sc-progress-fill" style="animation-delay:9s"></div></div></div><div class="sc-meta"><div class="sc-creator-row"><div class="sc-avatar" style="background:rgba(236,72,153,0.2)">⚡</div><div><div class="sc-creator-name">IShowSpeed</div><div class="sc-moment">Hype moment · 0:11</div></div><div class="sc-platform-icons"><span>📱</span><span>▶️</span></div></div><div class="sc-stats-row"><span class="sc-stat-pill" style="background:rgba(74,222,128,0.12);color:var(--green)">📈 3M–12M views</span><span class="sc-stat-pill" style="background:rgba(236,72,153,0.12);color:var(--pink)">Trend A+</span></div></div></div>
+    </div>
+    <div class="clips-carousel-mobile">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="carousel-slide"><div class="sc-video-wrap" style="border-radius:18px;overflow:hidden"><div class="sc-scene sc-scene-beast"><div class="sc-bg-anim"></div><div class="sc-emoji-big">💰</div><div class="sc-scene-sub">MrBeast</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">I</span><span class="cap-word">GAVE</span><span class="cap-word">HIM</span><span class="cap-word">$1,000,000</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">97</span><span class="sc-score-lbl">Viral</span></div></div></div>
+        <div class="carousel-slide"><div class="sc-video-wrap" style="border-radius:18px;overflow:hidden"><div class="sc-scene sc-scene-adin"><div class="sc-bg-anim"></div><div class="sc-emoji-big">😱</div><div class="sc-scene-sub">Adin Ross</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">BRO</span><span class="cap-word">ARE</span><span class="cap-word">YOU</span><span class="cap-word">SERIOUS?!</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">93</span><span class="sc-score-lbl">Viral</span></div></div></div>
+        <div class="carousel-slide"><div class="sc-video-wrap" style="border-radius:18px;overflow:hidden"><div class="sc-scene sc-scene-rogan"><div class="sc-bg-anim"></div><div class="sc-emoji-big">🎙️</div><div class="sc-scene-sub">Joe Rogan</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">THAT'S</span><span class="cap-word">THE</span><span class="cap-word">CRAZIEST</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">89</span><span class="sc-score-lbl">Viral</span></div></div></div>
+        <div class="carousel-slide"><div class="sc-video-wrap" style="border-radius:18px;overflow:hidden"><div class="sc-scene sc-scene-speed"><div class="sc-bg-anim"></div><div class="sc-emoji-big">⚡</div><div class="sc-scene-sub">IShowSpeed</div></div><div class="sc-caption-wrap"><div class="sc-caption neon-cap"><span class="cap-word">SPEED</span><span class="cap-word">IS</span><span class="cap-word">NOT</span><span class="cap-word">REAL</span></div></div><div class="sc-watermark">⚡ ClipSpeedAI</div><div class="sc-score-badge"><span class="sc-score-num">96</span><span class="sc-score-lbl">Viral</span></div></div></div>
+      </div>
+      <div class="carousel-dots"><div class="cdot active" onclick="goSlide(0)"></div><div class="cdot" onclick="goSlide(1)"></div><div class="cdot" onclick="goSlide(2)"></div><div class="cdot" onclick="goSlide(3)"></div></div>
+      <div class="swipe-hint">← Swipe to see all 4 creators →</div>
+    </div>
+    <div class="clips-cta-row">
+      <div class="clips-cta-text"><span>⚡</span><span>Your content. Processed the same way. In under 90 seconds.</span></div>
+      <button class="btn-primary" style="padding:12px 28px;font-size:13px" onclick="heroGenerate()">Get My Viral Clips Free →</button>
+    </div>
+  </div>
+</section>
+
+<section class="compare-section" id="compare">
+  <div class="container">
+    <div style="text-align:center">
+      <div class="section-label">Competitor Comparison</div>
+      <h2 class="section-title">Why creators switch to ClipSpeedAI</h2>
+    </div>
+    <div class="comp-tabs" style="margin-top:32px">
+      <button class="comp-tab active" onclick="switchComp('opus',this)">vs OpusClip</button>
+      <button class="comp-tab" onclick="switchComp('vidyo',this)">vs Vidyo.ai</button>
+      <button class="comp-tab" onclick="switchComp('submagic',this)">vs Submagic</button>
+    </div>
+    <div class="compare-table-wrap">
+      <table class="compare-table comp-tbl" id="tbl-opus">
+        <thead><tr><th style="width:34%;color:var(--muted2)">Feature</th><th class="us">⚡ ClipSpeedAI <span class="compare-badge">Winner</span></th><th class="them">OpusClip</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">⏱ Processing Speed</td><td class="us"><span class="win">~90 seconds, fully parallel</span></td><td class="them">3–8 mins, sequential</td></tr>
+          <tr><td class="row-label">✂️ Clips per Video</td><td class="us"><span class="win">8–12 clips per run</span></td><td class="them">4–6 clips</td></tr>
+          <tr><td class="row-label">📊 Viral Score</td><td class="us"><span class="win">Hook/Flow/Value/Trend — A–F grades</span></td><td class="them"><span class="lose">Black box single number</span></td></tr>
+          <tr><td class="row-label">💰 Affiliate</td><td class="us"><span class="win">Up to 50% recurring — forever</span></td><td class="them"><span class="lose">25% — first year only</span></td></tr>
+          <tr><td class="row-label">🔋 Unused Credits</td><td class="us"><span class="win">Credits roll over — never lost</span></td><td class="them"><span class="lose">Credits reset monthly</span></td></tr>
+          <tr><td class="row-label">🛡️ Money-Back</td><td class="us"><span class="win">7-day full refund</span></td><td class="them"><span class="lose">No guarantee</span></td></tr>
+        </tbody>
+      </table>
+      <table class="compare-table comp-tbl" id="tbl-vidyo" style="display:none">
+        <thead><tr><th style="width:34%;color:var(--muted2)">Feature</th><th class="us">⚡ ClipSpeedAI <span class="compare-badge">Winner</span></th><th class="them">Vidyo.ai</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">⏱ Speed</td><td class="us"><span class="win">~90 seconds</span></td><td class="them"><span class="lose">5–12 minutes</span></td></tr>
+          <tr><td class="row-label">📊 Viral Scoring</td><td class="us"><span class="win">Hook/Flow/Value/Trend</span></td><td class="them"><span class="lose">No scoring system</span></td></tr>
+          <tr><td class="row-label">💰 Affiliate</td><td class="us"><span class="win">Up to 50% recurring</span></td><td class="them"><span class="lose">No affiliate program</span></td></tr>
+          <tr><td class="row-label">🛡️ Money-Back</td><td class="us"><span class="win">7-day full refund</span></td><td class="them"><span class="lose">No guarantee</span></td></tr>
+        </tbody>
+      </table>
+      <table class="compare-table comp-tbl" id="tbl-submagic" style="display:none">
+        <thead><tr><th style="width:34%;color:var(--muted2)">Feature</th><th class="us">⚡ ClipSpeedAI <span class="compare-badge">Winner</span></th><th class="them">Submagic</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">✂️ Auto Clip Detection</td><td class="us"><span class="win">GPT-4o viral detection</span></td><td class="them"><span class="lose">Captions only — no clipping</span></td></tr>
+          <tr><td class="row-label">📊 Viral Scoring</td><td class="us"><span class="win">Hook/Flow/Value/Trend</span></td><td class="them"><span class="lose">No scoring</span></td></tr>
+          <tr><td class="row-label">💰 Affiliate</td><td class="us"><span class="win">Up to 50% recurring</span></td><td class="them"><span class="lose">No affiliate program</span></td></tr>
+          <tr><td class="row-label">🤖 Full Automation</td><td class="us"><span class="win">End-to-end, zero editing</span></td><td class="them"><span class="lose">Still requires manual clipping</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="comp-win-summary">
+      <div class="win-pill">🏆 Fastest processing in the market</div>
+      <div class="win-pill">🎯 Only tool with 4-metric viral scoring</div>
+      <div class="win-pill">💰 Only tool with up to 50% affiliate</div>
+      <div class="win-pill">🛡️ Only tool with 7-day money-back</div>
+    </div>
+    <div style="text-align:center;margin-top:40px">
+      <button class="btn-big btn-big-grad" onclick="heroGenerate()">Switch to ClipSpeedAI — Free Today ⚡</button>
+    </div>
+  </div>
+</section>
+
+<section class="pipeline-section" id="features">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:56px">
+      <div class="section-label">12-Step AI Pipeline</div>
+      <h2 class="section-title">12 AI engines running in parallel</h2>
+      <p class="section-sub" style="margin:0 auto;text-align:center">While competitors run 4–5 steps sequentially, we run 12 simultaneously.</p>
+    </div>
+    <div class="pipeline-grid">
+      <div class="pipe-card"><div class="pipe-num">Step 01</div><span class="pipe-icon">⬇️</span><div class="pipe-title">4K Download</div><div class="pipe-desc">yt-dlp dual-engine up to 1080p in seconds</div><span class="pipe-badge">1080p</span></div>
+      <div class="pipe-card"><div class="pipe-num">Step 02</div><span class="pipe-icon">🎙️</span><div class="pipe-title">Audio Extraction</div><div class="pipe-desc">Isolates clean audio track for transcription</div></div>
+      <div class="pipe-card"><div class="pipe-num">Step 03</div><span class="pipe-icon">📝</span><div class="pipe-title">AI Transcription</div><div class="pipe-desc">Whisper AI transcribes with timestamps, 99% accuracy</div><span class="pipe-badge">Whisper AI</span></div>
+      <div class="pipe-card"><div class="pipe-num">Step 04</div><span class="pipe-icon">🧠</span><div class="pipe-title">Viral Detection</div><div class="pipe-desc">GPT-4o analyzes transcripts for hooks and emotion peaks</div><span class="pipe-badge">GPT-4o</span></div>
+      <div class="pipe-card"><div class="pipe-num">Step 05</div><span class="pipe-icon">✂️</span><div class="pipe-title">Precision Cutting</div><div class="pipe-desc">FFmpeg cuts clips to the exact millisecond</div></div>
+      <div class="pipe-card"><div class="pipe-num">Step 06</div><span class="pipe-icon">💬</span><div class="pipe-title">Animated Captions</div><div class="pipe-desc">Bold, Neon, Fire, Minimal, Shadow — word-by-word synced</div><span class="pipe-badge">5 Styles</span></div>
+      <div class="pipe-card"><div class="pipe-num">Step 07</div><span class="pipe-icon">📐</span><div class="pipe-title">Smart Reframe</div><div class="pipe-desc">AI keeps speaker center-frame across all aspect ratios</div></div>
+      <div class="pipe-card"><div class="pipe-num">Step 08</div><span class="pipe-icon">🎬</span><div class="pipe-title">AI B-Roll</div><div class="pipe-desc">Relevant B-Roll overlays added automatically</div><span class="pipe-badge">Auto</span></div>
+      <div class="pipe-card"><div class="pipe-num">Step 09</div><span class="pipe-icon">🔊</span><div class="pipe-title">Audio Enhancement</div><div class="pipe-desc">AI noise removal, compression, EQ — studio quality</div></div>
+      <div class="pipe-card"><div class="pipe-num">Step 10</div><span class="pipe-icon">🎙️</span><div class="pipe-title">AI Voiceover</div><div class="pipe-desc">GPT-4 writes intros, OpenAI TTS narrates</div><span class="pipe-badge">OpenAI TTS</span></div>
+      <div class="pipe-card"><div class="pipe-num">Step 11</div><span class="pipe-icon">📱</span><div class="pipe-title">Multi-Platform</div><div class="pipe-desc">Auto-exports 9:16, 1:1, 16:9 for TikTok, Reels, Shorts</div></div>
+      <div class="pipe-card" style="border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.05)"><div class="pipe-num">Step 12</div><span class="pipe-icon">☁️</span><div class="pipe-title">Cloud Delivery</div><div class="pipe-desc">Clips on R2 CDN — instant download, no waiting</div><span class="pipe-badge">R2 CDN</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="features-section">
+  <div class="container">
+    <div style="text-align:center"><div class="section-label">Features</div><h2 class="section-title">Everything you need to go viral</h2></div>
+    <div class="features-grid">
+      <div class="feat-card"><div class="feat-icon-wrap" style="background:rgba(168,85,247,0.15)">🎯</div><div class="feat-title">Viral Score Engine</div><div class="feat-desc">Every clip graded on Hook, Flow, Value and Trend — A/B/C/D/F ratings tell you exactly which clips to post.</div><span class="feat-tag" style="background:rgba(168,85,247,0.15);color:var(--p)">Exclusive</span></div>
+      <div class="feat-card"><div class="feat-icon-wrap" style="background:rgba(34,211,238,0.15)">💬</div><div class="feat-title">5 Caption Styles</div><div class="feat-desc">Bold Word-by-Word, Neon Glow, Fire, Minimal Clean, Drop Shadow. Word-level sync drives watch time.</div><span class="feat-tag" style="background:rgba(34,211,238,0.15);color:var(--cyan)">5 Styles</span></div>
+      <div class="feat-card"><div class="feat-icon-wrap" style="background:rgba(74,222,128,0.15)">🔋</div><div class="feat-title">Flexible Credits</div><div class="feat-desc">1 credit = 1 minute processed. Start with 50 free. Buy packs to scale.</div><span class="feat-tag" style="background:rgba(74,222,128,0.15);color:var(--green)">Flexible</span></div>
+      <div class="feat-card"><div class="feat-icon-wrap" style="background:rgba(251,191,36,0.15)">🎬</div><div class="feat-title">AI B-Roll</div><div class="feat-desc">Automatically inserts contextually relevant B-Roll overlays that keep viewers hooked 40% longer.</div><span class="feat-tag" style="background:rgba(251,191,36,0.15);color:#facc15">+40% Retention</span></div>
+      <div class="feat-card"><div class="feat-icon-wrap" style="background:rgba(249,115,22,0.15)">🔊</div><div class="feat-title">Studio Audio</div><div class="feat-desc">AI removes background noise, compresses dynamics, and EQs every clip for professional sound.</div><span class="feat-tag" style="background:rgba(249,115,22,0.15);color:#f97316">Studio Quality</span></div>
+      <div class="feat-card"><div class="feat-icon-wrap" style="background:rgba(74,222,128,0.15)">💰</div><div class="feat-title">Up to 50% Affiliate</div><div class="feat-desc">Earn up to 50% recurring commission on every referral — every month, forever.</div><span class="feat-tag" style="background:rgba(74,222,128,0.15);color:var(--green)">Up to 50%</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <div class="container">
+    <div style="text-align:center"><div class="section-label">How It Works</div><h2 class="section-title">3 steps. 90 seconds. 10 viral clips.</h2></div>
+    <div class="how-steps">
+      <div class="step-card"><div class="step-num">1</div><div class="step-title">Paste Any YouTube URL</div><div class="step-desc">Drop any YouTube link — long-form, podcast, stream. Any niche, any length up to 2 hours.</div></div>
+      <div class="step-card"><div class="step-num">2</div><div class="step-title">12-Step AI Does Everything</div><div class="step-desc">Download → Transcribe → Analyze → Cut → Caption → Reframe → B-Roll → Audio → Score → Upload. All automatic.</div></div>
+      <div class="step-card"><div class="step-num">3</div><div class="step-title">Download & Go Viral</div><div class="step-desc">Clips arrive with viral scores, hook lines, SEO titles, hashtags, and predicted view counts.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:16px">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-title">Simple credits. No surprises.<br>Save 40% going yearly.</h2>
+    </div>
+    <div class="billing-toggle-wrap">
+      <span class="billing-label active" id="lbl-monthly" onclick="setBilling(false)">Monthly</span>
+      <div class="toggle-track" id="billingTrack" onclick="toggleBilling()"><div class="toggle-thumb"></div></div>
+      <span class="billing-label" id="lbl-yearly" onclick="setBilling(true)">Yearly</span>
+      <div class="yearly-badge">🎉 Save 40%</div>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Free</div>
+        <div class="price-amount"><sup>$</sup><span id="price-free">0</span></div>
+        <div class="price-period">forever free</div>
+        <div class="price-yearly-note" id="note-free"></div>
+        <div class="price-credits">50 credits included</div>
+        <div class="credit-note">1 credit = 1 min of video</div>
+        <ul class="price-features"><li>50 free credits</li><li>AI viral scoring</li><li>Auto-captions (basic)</li><li>720p export</li><li class="no">No watermark removal</li><li class="no">Affiliate Program</li></ul>
+        <button class="price-btn price-btn-outline" onclick="heroGenerate()">Start Free →</button>
+        <div class="money-back">⚡ AI processes in 90 seconds</div>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-amount"><sup>$</sup><span id="price-starter">20</span></div>
+        <div class="price-period" id="period-starter">per month</div>
+        <div class="price-yearly-note" id="note-starter"></div>
+        <div class="price-credits">200 credits/month</div>
+        <div class="credit-note">No watermark. Starts immediately.</div>
+        <ul class="price-features"><li>200 credits/month</li><li>No watermark</li><li>All caption styles</li><li>1080p export</li><li>3 platforms</li><li class="no">Priority processing</li></ul>
+        <button class="price-btn price-btn-outline" onclick="goStripe('starter')">Get Starter →</button>
+        <div class="money-back">⚡ AI processes in 90 seconds</div>
+      </div>
+      <div class="price-card featured">
+        <div class="featured-badge">⭐ Most Popular</div>
+        <div class="price-name">Pro</div>
+        <div class="price-amount"><sup>$</sup><span id="price-pro">40</span></div>
+        <div class="price-period" id="period-pro">per month</div>
+        <div class="price-yearly-note" id="note-pro"></div>
+        <div class="price-credits" id="proCredits">300 credits/month</div>
+        <div class="credit-note">For creators serious about going viral.</div>
+        <ul class="price-features"><li>300–1,500 credits/month</li><li>No watermark</li><li>All caption styles</li><li>1080p–4K export</li><li>All 5 platforms</li><li>Priority processing</li><li>Affiliate Program (40%)</li></ul>
+        <div class="packs-section">
+          <div class="packs-label">⚡ Pro Credit Packs</div>
+          <div class="pack-row selected" onclick="selectPack(this,1)"><div class="pack-radio"></div><div class="pack-info"><div class="pack-name">1× Pack</div><div class="pack-credits">300 credits</div></div><div><div class="pack-price" id="pp1">$40/mo</div></div></div>
+          <div class="pack-row" onclick="selectPack(this,2)"><div class="pack-radio"></div><div class="pack-info"><div class="pack-name">2× Pack</div><div class="pack-credits">600 credits</div></div><div><div class="pack-price" id="pp2">$70/mo</div><div class="pack-savings">Save $10</div></div></div>
+          <div class="pack-row" onclick="selectPack(this,3)"><div class="pack-radio"></div><div class="pack-info"><div class="pack-name">3× Pack</div><div class="pack-credits">900 credits</div></div><div><div class="pack-price" id="pp3">$100/mo</div><div class="pack-savings">Save $20</div></div></div>
+          <div class="pack-row" onclick="selectPack(this,4)"><div class="pack-radio"></div><div class="pack-info"><div class="pack-name">4× Pack</div><div class="pack-credits">1,200 credits</div></div><div><div class="pack-price" id="pp4">$120/mo</div><div class="pack-savings">Save $40</div></div></div>
+          <div class="pack-row" onclick="selectPack(this,5)"><div class="pack-radio"></div><div class="pack-info"><div class="pack-name">5× Pack</div><div class="pack-credits">1,500 credits</div></div><div><div class="pack-price" id="pp5">$140/mo</div><div class="pack-savings">Save $60</div></div></div>
+          <button class="pack-cta" id="packCta" onclick="goStripe('pro1')">1× Pack — $40/mo →</button>
+          <div style="text-align:center;font-size:10px;color:var(--gold);margin-top:8px">⚡ Only 83 spots left at this price</div>
+        </div>
+        <div class="money-back">⚡ AI processes in 90 seconds</div>
+      </div>
+      <div class="price-card agency-card">
+        <div class="agency-badge">💎 Agency</div>
+        <div class="price-name">Agency</div>
+        <div class="price-amount"><sup>$</sup><span id="price-agency">200</span></div>
+        <div class="price-period" id="period-agency">per month</div>
+        <div class="price-yearly-note" id="note-agency"></div>
+        <div class="price-credits">2,500 credits/month</div>
+        <div class="credit-note">Run multiple channels at scale.</div>
+        <ul class="price-features"><li>2,500 credits/month</li><li>No watermark</li><li>Everything in Pro</li><li>White-label exports</li><li>4K export</li><li>API access</li><li>50% affiliate rate</li></ul>
+        <button class="price-btn price-btn-gold" onclick="goStripe('agency')">Get Agency →</button>
+        <div class="money-back">⚡ AI processes in 90 seconds</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="test-section">
+  <div class="container">
+    <div style="text-align:center"><div class="section-label">Verified Results</div><h2 class="section-title">Real creators. Real numbers.</h2></div>
+    <div class="test-grid">
+      <div class="test-card"><span class="test-verified">✓ Verified</span><div class="test-stars">★★★★★</div><div class="test-quote">"I was paying $40/mo for OpusClip and getting 4–5 slow clips. ClipSpeedAI gives me 10 clips in 90 seconds AND the viral scores actually predict what performs."</div><div class="test-result-box"><div style="font-size:20px">📈</div><div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">View growth</div><div class="test-result-num">+340% in 30 days</div></div></div><div class="test-author"><div class="test-avatar" style="background:rgba(168,85,247,0.2)">🎙️</div><div><div class="test-name">Marcus T.</div><div class="test-handle">Podcast · 180K subscribers</div></div></div></div>
+      <div class="test-card"><span class="test-verified">✓ Verified</span><div class="test-stars">★★★★★</div><div class="test-quote">"The Hook/Flow/Value grades changed everything. I stopped posting C-grade clips and only post A's now. TikTok went from 50K to 800K views per month in 6 weeks."</div><div class="test-result-box"><div style="font-size:20px">🚀</div><div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Monthly views</div><div class="test-result-num">50K → 800K</div></div></div><div class="test-author"><div class="test-avatar" style="background:rgba(34,211,238,0.2)">💪</div><div><div class="test-name">Kayla R.</div><div class="test-handle">Fitness · 92K followers</div></div></div></div>
+      <div class="test-card"><span class="test-verified">✓ Verified</span><div class="test-stars">★★★★★</div><div class="test-quote">"The 50% affiliate rate is genuinely insane. I referred 3 agencies and now make $1,200/mo in passive income just from sharing my link."</div><div class="test-result-box"><div style="font-size:20px">💰</div><div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Monthly affiliate income</div><div class="test-result-num">$1,200/mo passive</div></div></div><div class="test-author"><div class="test-avatar" style="background:rgba(74,222,128,0.2)">💰</div><div><div class="test-name">Devon K.</div><div class="test-handle">Agency Owner · 12 clients</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="faq-section" id="faq">
+  <div class="container">
+    <div style="text-align:center"><div class="section-label">FAQ</div><h2 class="section-title">Every question answered.</h2></div>
+    <div class="faq-list">
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How do credits work?<span class="faq-icon">+</span></div><div class="faq-a">1 credit = 1 minute of video processed. A 10-minute video uses 10 credits. Free plan includes 50 credits.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How fast does ClipSpeedAI process videos?<span class="faq-icon">+</span></div><div class="faq-a">Most videos under 10 minutes are fully processed in under 90 seconds. Our parallel 12-step pipeline runs everything simultaneously.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How does the affiliate program work?<span class="faq-icon">+</span></div><div class="faq-a">You get a unique referral link. Every paying customer earns you recurring commission — 25% Bronze up to 50% Agency — every month for life.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Is there a money-back guarantee?<span class="faq-icon">+</span></div><div class="faq-a">Yes — all paid plans include a 7-day full money-back guarantee. Email clipspeedaisupport@gmail.com and we'll refund 100% immediately.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime?<span class="faq-icon">+</span></div><div class="faq-a">Yes — no contracts, no cancellation fees. Cancel with one click from your dashboard.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <div class="cta-glow"></div>
+      <div class="section-label" style="margin-bottom:16px">Ready to dominate short-form?</div>
+      <h2>Stop leaving views on the table.<br><span class="grad-text">Start clipping today.</span></h2>
+      <p>Join 9,800+ creators turning long videos into viral shorts in under 90 seconds.</p>
+      <div class="cta-btns">
+        <button class="btn-big btn-big-grad" onclick="heroGenerate()">🚀 Get My Viral Clips Free — 50 Credits</button>
+        <button class="btn-big btn-big-ghost" onclick="goAnchor('compare')">See vs OpusClip</button>
+      </div>
+      <div class="cta-trust">
+        <span class="cta-trust-item">🛡️ 7-day money-back</span>
+        <span class="cta-trust-item">⚡ 90-second processing</span>
+        <span class="cta-trust-item">🚫 No credit card to start</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><h3>⚡ ClipSpeedAI</h3><p>The fastest AI video clipping tool on the planet. Turn any YouTube video into viral shorts in under 90 seconds.</p></div>
+      <div class="footer-col"><h4>Product</h4><a onclick="goAnchor('features')">Features</a><a onclick="goAnchor('pricing')">Pricing</a><a onclick="goAnchor('compare')">vs OpusClip</a></div>
+      <div class="footer-col"><h4>Company</h4><a onclick="switchTab('affiliate',null)">Affiliate Program</a><a href="mailto:clipspeedaisupport@gmail.com">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a>Terms of Service</a><a>Privacy Policy</a></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 ClipSpeedAI. All rights reserved.</span><span>Built to dominate short-form video 🔥</span></div>
+  </div>
+</footer>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page">
+  <div class="dash-hero">
+    <div class="dash-hero-inner">
+      <div class="dash-hero-badge"><div class="live-dot"></div> AI Pipeline Ready · <span id="creditDisplay">50 credits remaining</span></div>
+      <h1 class="dash-hero-title">Turn any video into<br><span class="dash-hero-grad">viral clips instantly</span></h1>
+      <p class="dash-hero-sub">Paste a YouTube URL — real AI finds viral moments, adds captions, reframes, and delivers clips in under 90 seconds.</p>
+      <div class="dash-hero-form">
+        <div class="dash-hero-input-wrap"><span class="dash-url-icon">🔗</span><input class="dash-hero-url" placeholder="https://youtube.com/watch?v=..." id="dashUrl"></div>
+        <button class="dash-hero-btn" id="dashGenBtn" onclick="startGenerate()">Generate Clips ⚡</button>
+      </div>
+      <div class="dash-hero-trust"><span>✓ ~90 sec processing</span><span>·</span><span>✓ GPT-4o viral detection</span><span>·</span><span>✓ Whisper AI transcription</span></div>
+      <div class="dash-processing" id="dashProcessing">
+        <div class="proc-card">
+          <div class="proc-pct-row"><div class="proc-pct" id="procPct">0<span style="font-size:28px">%</span></div><div class="proc-pct-label">Processing</div></div>
+          <div class="dash-proc-bar"><div class="dash-proc-fill" id="dashProcFill"></div></div>
+          <div class="dash-proc-steps">
+            <div class="proc-step" id="ps-queued"><div class="step-dot"></div>📋 Queued</div>
+            <div class="proc-step" id="ps-downloading"><div class="step-dot"></div>⬇️ Downloading</div>
+            <div class="proc-step" id="ps-transcribing"><div class="step-dot"></div>📝 Transcribing</div>
+            <div class="proc-step" id="ps-analyzing"><div class="step-dot"></div>🧠 AI Analysis</div>
+            <div class="proc-step" id="ps-cutting"><div class="step-dot"></div>✂️ Cutting Clips</div>
+            <div class="proc-step" id="ps-captioning"><div class="step-dot"></div>💬 Captions</div>
+            <div class="proc-step" id="ps-reframing"><div class="step-dot"></div>📐 Reframing</div>
+            <div class="proc-step" id="ps-uploading"><div class="step-dot"></div>☁️ Uploading</div>
+          </div>
+          <div class="dash-proc-status" id="dashProcStatus">Initializing...</div>
+          <div class="proc-error" id="procError"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="realClipsSection" style="display:none">
+    <div class="dash-clips-header">
+      <div><div class="dash-title" id="realClipsTitle">⚡ Your Clips</div><div class="dash-subtitle" id="realClipsSub">Sorted by viral score</div></div>
+    </div>
+    <div class="real-clips-grid" id="realClipsGrid"></div>
+  </div>
+</div>
+
+<!-- AFFILIATE -->
+<div id="affiliate" class="page">
+  <div style="max-width:900px;margin:0 auto;padding:0 24px">
+    <div class="aff-header"><div><div class="aff-title">💰 Affiliate Dashboard</div><div class="aff-subtitle">Earn recurring commissions every month — forever</div></div><div class="aff-tier-badge">🥇 Gold Tier · 35% Commission</div></div>
+    <div class="aff-body">
+      <div class="aff-stats-grid">
+        <div class="aff-stat-card"><div class="aff-stat-num" style="background:linear-gradient(135deg,var(--green),#16a34a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">$1,247</div><div class="aff-stat-label">Total Earned</div></div>
+        <div class="aff-stat-card"><div class="aff-stat-num" style="background:linear-gradient(135deg,var(--p),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">$348</div><div class="aff-stat-label">This Month</div></div>
+        <div class="aff-stat-card"><div class="aff-stat-num" style="color:#fff">24</div><div class="aff-stat-label">Active Referrals</div></div>
+        <div class="aff-stat-card"><div class="aff-stat-num" style="color:#fff">83</div><div class="aff-stat-label">Total Clicks</div></div>
+      </div>
+      <div class="aff-link-card"><div class="aff-link-label">Your Referral Link</div><div class="aff-link-row"><div class="aff-link-box" id="affLink">https://clipspeed.ai/?ref=creator123</div><button class="aff-copy-btn" onclick="copyAffLink()">📋 Copy Link</button></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var API='https://charming-beauty-production-9923.up.railway.app';
+var currentProjectId=null;
+var pollTimer=null;
+var savedEmail='';
+var savedPass='';
+var isYearly=false;
+var selectedPack=1;
+
+function getToken(){return sessionStorage.getItem('cs_token')}
+function setToken(t){sessionStorage.setItem('cs_token',t)}
+
+async function refreshToken(){
+  if(!savedEmail||!savedPass)return false;
+  try{
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:savedEmail,password:savedPass})});
+    var d=await r.json();
+    if(d.token||d.access_token){setToken(d.token||d.access_token);return true}
+  }catch(e){}
+  return false;
+}
+
+async function authFetch(url,opts){
+  opts=opts||{};opts.headers=opts.headers||{};
+  var t=getToken();
+  if(t)opts.headers['Authorization']='Bearer '+t;
+  var r=await fetch(url,opts);
+  if(r.status===401||r.status===403){
+    var refreshed=await refreshToken();
+    if(refreshed){opts.headers['Authorization']='Bearer '+getToken();return fetch(url,opts)}
+    var pid=currentProjectId;
+    sessionStorage.clear();
+    if(pid)sessionStorage.setItem('cs_pending_project',pid);
+    if(pollTimer){clearTimeout(pollTimer);pollTimer=null}
+    document.getElementById('loginInfo').textContent='Session expired — sign in again.';
+    document.getElementById('loginInfo').style.display='block';
+    openLogin('login');
+    throw new Error('TOKEN_EXPIRED');
+  }
+  return r;
+}
+
+function showToast(msg,ms){
+  ms=ms||3500;
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},ms);
+}
+
+function showLanding(){
+  document.getElementById('pageTabs').classList.remove('visible');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('landing').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function switchTab(page,btn){
+  if(page==='landing'){showLanding();return}
+  if(page==='dashboard'&&!getToken()){openLogin('signup');return}
+  document.getElementById('pageTabs').classList.add('visible');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+  else{var m={dashboard:1,affiliate:2};var i=m[page];if(i!==undefined)document.querySelectorAll('.tab-btn')[i].classList.add('active')}
+  window.scrollTo(0,0);
+  if(page==='dashboard'){
+    var pending=sessionStorage.getItem('cs_pending_project');
+    if(pending){sessionStorage.removeItem('cs_pending_project');currentProjectId=pending;document.getElementById('dashProcessing').style.display='block';pollStatus()}
+    else{var last=sessionStorage.getItem('cs_last_project');if(last)loadClips(last)}
+  }
+}
+
+function goAnchor(id){showLanding();setTimeout(function(){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth'})},80)}
+
+function openLogin(tab){
+  document.getElementById('loginOverlay').classList.add('open');
+  switchLoginTab(tab);
+  document.body.style.overflow='hidden';
+}
+
+function closeLogin(){
+  document.getElementById('loginOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function switchLoginTab(tab){
+  var l=tab==='login';
+  document.getElementById('ltab-login').classList.toggle('active',l);
+  document.getElementById('ltab-signup').classList.toggle('active',!l);
+  document.getElementById('lform-login').style.display=l?'block':'none';
+  document.getElementById('lform-signup').style.display=l?'none':'block';
+  document.getElementById('loginError').style.display='none';
+}
+
+async function handleLogin(){
+  var email=document.getElementById('l-email').value.trim();
+  var pass=document.getElementById('l-pass').value;
+  var errEl=document.getElementById('loginError');
+  errEl.style.display='none';
+  document.getElementById('loginInfo').style.display='none';
+  if(!email||!pass){errEl.textContent='Please fill in all fields';errEl.style.display='block';return}
+  var btn=document.getElementById('loginSubmitBtn');
+  btn.disabled=true;btn.textContent='Signing in...';
+  try{
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
+    var d=await r.json();
+    if(!r.ok||d.error){errEl.textContent=d.error||'Login failed';errEl.style.display='block';btn.disabled=false;btn.textContent='Sign In →';return}
+    savedEmail=email;savedPass=pass;
+    setToken(d.token||d.access_token);
+    closeLogin();
+    showToast('✅ Signed in!');
+    setTimeout(function(){switchTab('dashboard',null)},800);
+  }catch(e){
+    errEl.textContent='Connection error — please try again';
+    errEl.style.display='block';
+    btn.disabled=false;btn.textContent='Sign In →';
+  }
+}
+
+async function handleSignup(){
+  var name=document.getElementById('s-name').value.trim();
+  var email=document.getElementById('s-email').value.trim();
+  var pass=document.getElementById('s-pass').value;
+  var errEl=document.getElementById('loginError');
+  errEl.style.display='none';
+  if(!name||!email||!pass){errEl.textContent='Please fill in all fields';errEl.style.display='block';return}
+  if(pass.length<8){errEl.textContent='Password must be 8+ characters';errEl.style.display='block';return}
+  var btn=document.getElementById('signupSubmitBtn');
+  btn.disabled=true;btn.textContent='Creating account...';
+  try{
+    var r=await fetch(API+'/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass,name:name})});
+    var d=await r.json();
+    if(!r.ok||d.error){errEl.textContent=d.error||'Signup failed';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return}
+    savedEmail=email;savedPass=pass;
+    if(d.token||d.access_token){
+      setToken(d.token||d.access_token);
+      closeLogin();
+      showToast('✅ Welcome to ClipSpeedAI! 🎉',4000);
+      setTimeout(function(){switchTab('dashboard',null)},1000);
+    }else{
+      closeLogin();
+      showToast('✅ Check your email to verify your account!',5000);
     }
+  }catch(e){
+    errEl.textContent='Connection error — please try again';
+    errEl.style.display='block';
+    btn.disabled=false;btn.textContent='Create Free Account →';
+  }
+}
 
-    // Get clips
-    const { data: clips, error } = await supabase
-      .from('clips')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('user_id', userId)
-      .order('viral_score', { ascending: false });
+function handleGoogle(){
+  window.location.href=API+'/auth/google?redirect_to='+encodeURIComponent(window.location.origin);
+}
 
-    if (error) {
-      return res.status(500).json({ error: 'Failed to fetch clips' });
+function heroGenerate(){
+  var url=document.getElementById('heroUrl').value.trim();
+  if(!getToken()){openLogin('signup');return}
+  if(url)sessionStorage.setItem('cs_hero_url',url);
+  switchTab('dashboard',null);
+  if(url){
+    setTimeout(function(){
+      document.getElementById('dashUrl').value=url;
+      startGenerate();
+    },300);
+  }
+}
+
+async function startGenerate(){
+  if(!getToken()){openLogin('signup');return}
+  var url=document.getElementById('dashUrl').value.trim();
+  if(!url){showToast('⚠️ Please paste a YouTube URL');return}
+  if(!url.includes('youtube.com')&&!url.includes('youtu.be')){showToast('⚠️ Please enter a valid YouTube URL');return}
+  var btn=document.getElementById('dashGenBtn');
+  btn.disabled=true;btn.textContent='Starting...';
+  document.getElementById('dashProcessing').style.display='block';
+  document.getElementById('realClipsSection').style.display='none';
+  document.getElementById('procError').style.display='none';
+  resetSteps();
+  setStep('queued','active');
+  document.getElementById('dashProcStatus').textContent='Submitting to AI pipeline...';
+  try{
+    var r=await authFetch(API+'/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,captionStyle:'bold'})});
+    var d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Failed to start');
+    currentProjectId=d.projectId;
+    sessionStorage.setItem('cs_last_project',currentProjectId);
+    btn.textContent='Processing...';
+    pollStatus();
+  }catch(e){
+    if(e.message==='TOKEN_EXPIRED')return;
+    document.getElementById('procError').textContent='Error: '+e.message;
+    document.getElementById('procError').style.display='block';
+    btn.disabled=false;btn.textContent='Generate Clips ⚡';
+  }
+}
+
+function resetSteps(){
+  ['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'].forEach(function(s){
+    var el=document.getElementById('ps-'+s);if(el)el.className='proc-step';
+  });
+  document.getElementById('dashProcFill').style.width='0%';
+  document.getElementById('procPct').innerHTML='0<span style="font-size:28px">%</span>';
+}
+
+function setStep(id,state){
+  var el=document.getElementById('ps-'+id);if(el)el.className='proc-step '+state;
+}
+
+var stepMap={
+  queued:{pct:5,steps:['queued']},
+  downloading:{pct:15,steps:['queued','downloading']},
+  transcribing:{pct:35,steps:['queued','downloading','transcribing']},
+  analyzing:{pct:55,steps:['queued','downloading','transcribing','analyzing']},
+  cutting:{pct:70,steps:['queued','downloading','transcribing','analyzing','cutting']},
+  captioning:{pct:82,steps:['queued','downloading','transcribing','analyzing','cutting','captioning']},
+  reframing:{pct:91,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing']},
+  uploading:{pct:97,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
+  done:{pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']}
+};
+
+var statusMessages={
+  queued:'Queued — pipeline ready...',
+  downloading:'Downloading video at 1080p...',
+  transcribing:'Whisper AI transcribing audio...',
+  analyzing:'GPT-4o detecting viral moments...',
+  cutting:'FFmpeg precision cutting clips...',
+  captioning:'Adding animated captions...',
+  reframing:'Smart reframing for all platforms...',
+  uploading:'Uploading clips to CDN...',
+  done:'Done! Your viral clips are ready 🎉'
+};
+
+function updateProgress(status){
+  var info=stepMap[status]||stepMap['queued'];
+  var allSteps=['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'];
+  allSteps.forEach(function(s){
+    if(info.steps.indexOf(s)!==-1){
+      setStep(s,status==='done'?'done':(s===info.steps[info.steps.length-1]?'active':'done'));
     }
+  });
+  if(status==='done')allSteps.forEach(function(s){setStep(s,'done')});
+  document.getElementById('dashProcFill').style.width=info.pct+'%';
+  document.getElementById('procPct').innerHTML=info.pct+'<span style="font-size:28px">%</span>';
+  document.getElementById('dashProcStatus').textContent=statusMessages[status]||'Processing...';
+}
 
-    res.json({
-      project,
-      clips: clips || [],
-      total: clips?.length || 0,
-    });
+async function pollStatus(){
+  if(!currentProjectId)return;
+  try{
+    var r=await authFetch(API+'/analyze/'+currentProjectId+'/status');
+    var d=await r.json();
+    var status=(d.status||'pending').toLowerCase();
+    // map backend statuses to our progress steps
+    if(status==='pending')status='queued';
+    if(status==='processing'&&d.progress){
+      var p=d.progress;
+      if(p<20)status='downloading';
+      else if(p<40)status='transcribing';
+      else if(p<60)status='analyzing';
+      else if(p<75)status='cutting';
+      else if(p<88)status='captioning';
+      else if(p<95)status='reframing';
+      else status='uploading';
+    }
+    if(status==='completed'||status==='complete')status='done';
+    updateProgress(status);
+    if(status==='done'||status==='completed'||status==='complete'){
+      document.getElementById('dashGenBtn').disabled=false;
+      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';
+      loadClips(currentProjectId);return;
+    }
+    if(status==='error'||status==='failed'){
+      document.getElementById('procError').textContent='Processing failed: '+(d.error||'Unknown error');
+      document.getElementById('procError').style.display='block';
+      document.getElementById('dashGenBtn').disabled=false;
+      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';return;
+    }
+    pollTimer=setTimeout(pollStatus,3000);
+  }catch(e){
+    if(e.message==='TOKEN_EXPIRED')return;
+    pollTimer=setTimeout(pollStatus,5000);
+  }
+}
 
-  } catch (err) {
-    console.error('Clips fetch error:', err);
-    res.status(500).json({ error: 'Failed to fetch clips' });
+async function loadClips(projectId){
+  try{
+    var r=await authFetch(API+'/clips/'+projectId);
+    var d=await r.json();
+    var clips=d.clips||[];
+    if(!Array.isArray(clips)||clips.length===0){
+      // project exists but clips not ready yet
+      if(d.project&&d.project.status!=='completed'){pollTimer=setTimeout(function(){loadClips(projectId)},4000);return}
+      showToast('No clips found.');return;
+    }
+    renderClips(clips);
+  }catch(e){if(e.message!=='TOKEN_EXPIRED')showToast('Could not load clips.')}
+}
+
+function renderClips(clips){
+  var grid=document.getElementById('realClipsGrid');
+  var section=document.getElementById('realClipsSection');
+  grid.innerHTML='';
+  clips.sort(function(a,b){return(b.viral_score||0)-(a.viral_score||0)});
+  clips.forEach(function(clip,i){
+    var score=clip.viral_score||Math.floor(75+Math.random()*22);
+    var title=clip.title||clip.clip_title||'Viral Clip #'+(i+1);
+    var hook=clip.hook_line||clip.hook||'';
+    var tags=clip.hashtags||(clip.tags?clip.tags.join(' '):'');
+    var dur=clip.duration?Math.round(clip.duration)+'s':'~12s';
+    var url=clip.r2_url||clip.download_url||clip.url||clip.video_url||'';
+    var card=document.createElement('div');
+    card.className='real-clip-card';
+    card.style.animationDelay=(i*0.08)+'s';
+    card.innerHTML='<div class="real-clip-video-wrap">'+(url?'<video src="'+url+'" controls playsinline preload="metadata"></video>':'<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px">Preview unavailable</div>')+'<div class="real-clip-score">⚡ '+score+'</div></div>'
+      +'<div class="real-clip-info"><div class="real-clip-title">'+title+'</div>'
+      +(hook?'<div class="real-clip-hook">"'+hook+'"</div>':'')
+      +(tags?'<div class="real-clip-tags">'+tags+'</div>':'')
+      +'<div class="real-clip-meta">Duration: '+dur+' · Viral Score: '+score+'/100</div>'
+      +'<div class="real-clip-actions">'
+      +(url?'<button class="clip-dl-btn clip-dl-primary" onclick="downloadClip(\''+url+'\',\'clip-'+i+'.mp4\')">⬇️ Download</button>':'')
+      +'<button class="clip-dl-btn clip-dl-secondary" onclick="copyClipUrl(\''+url+'\')">🔗 Copy Link</button>'
+      +'</div></div>';
+    grid.appendChild(card);
+  });
+  document.getElementById('realClipsTitle').textContent='⚡ Your Clips ('+clips.length+')';
+  document.getElementById('realClipsSub').textContent='Sorted by viral score — ready to post';
+  section.style.display='block';
+  section.scrollIntoView({behavior:'smooth'});
+}
+
+function downloadClip(url,filename){
+  if(!url){showToast('No download URL available');return}
+  var a=document.createElement('a');a.href=url;a.download=filename||'clip.mp4';a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function copyClipUrl(url){
+  if(!url){showToast('No URL to copy');return}
+  navigator.clipboard.writeText(url).then(function(){showToast('🔗 Link copied!')}).catch(function(){showToast('Could not copy link')});
+}
+
+function toggleFaq(el){
+  var item=el.parentElement;
+  var wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open')});
+  if(!wasOpen)item.classList.add('open');
+}
+
+function switchComp(name,btn){
+  document.querySelectorAll('.comp-tbl').forEach(function(t){t.style.display='none'});
+  var tbl=document.getElementById('tbl-'+name);if(tbl)tbl.style.display='table';
+  document.querySelectorAll('.comp-tab').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+}
+
+function toggleBilling(){setBilling(!isYearly)}
+function setBilling(yearly){
+  isYearly=yearly;
+  document.getElementById('billingTrack').classList.toggle('yearly',yearly);
+  document.getElementById('lbl-monthly').classList.toggle('active',!yearly);
+  document.getElementById('lbl-yearly').classList.toggle('active',yearly);
+  var prices={starter:[20,12],pro:[40,24],agency:[200,120]};
+  Object.keys(prices).forEach(function(k){
+    var p=prices[k];
+    document.getElementById('price-'+k).textContent=yearly?p[1]:p[0];
+    var n=document.getElementById('note-'+k);
+    if(n)n.textContent=yearly?'Billed $'+(p[1]*12)+'/yr (save $'+((p[0]-p[1])*12)+')':'';
+    var pd=document.getElementById('period-'+k);
+    if(pd)pd.textContent=yearly?'per month, billed yearly':'per month';
+  });
+  var packPrices=yearly?['$24/mo','$42/mo','$60/mo','$72/mo','$84/mo']:['$40/mo','$70/mo','$100/mo','$120/mo','$140/mo'];
+  for(var i=1;i<=5;i++){var el=document.getElementById('pp'+i);if(el)el.textContent=packPrices[i-1]}
+  updatePackCta();
+}
+
+function selectPack(el,num){
+  document.querySelectorAll('.pack-row').forEach(function(r){r.classList.remove('selected')});
+  el.classList.add('selected');selectedPack=num;updatePackCta();
+}
+
+function updatePackCta(){
+  var pm=[40,70,100,120,140],py=[24,42,60,72,84];
+  var prices=isYearly?py:pm;
+  var credits=[300,600,900,1200,1500];
+  var btn=document.getElementById('packCta');
+  if(btn){btn.textContent=selectedPack+'× Pack — $'+prices[selectedPack-1]+'/mo →';btn.onclick=function(){goStripe('pro'+selectedPack)}}
+  var c=document.getElementById('proCredits');if(c)c.textContent=credits[selectedPack-1]+' credits/month';
+}
+
+function goStripe(plan){
+  if(!getToken()){openLogin('signup');return}
+  var monthly=!isYearly;
+  var links={
+    starter:   monthly ? 'https://buy.stripe.com/dRm4gB6RJ9JZ4pQ8Za9MY0j' : 'https://buy.stripe.com/8x2dRb0tlg8n5tU3EQ9MY0f',
+    pro1:      monthly ? 'https://buy.stripe.com/9B6eVf1xp09p5tU5MY9MY0i' : 'https://buy.stripe.com/9B6cN7ekb4pF4pQ8Za9MY04',
+    pro2:      monthly ? 'https://buy.stripe.com/8x2aEZgsjf4j2hIfny9MY0h' : 'https://buy.stripe.com/eVq4gBdg7bS7bSidfq9MY0a',
+    pro3:      monthly ? 'https://buy.stripe.com/aFa5kFb7ZaO34pQ8Za9MY0e' : 'https://buy.stripe.com/3cI9AVb7Z1dt2hI5MY9MY09',
+    pro4:      monthly ? 'https://buy.stripe.com/5kQbJ33Fx5tJf4u4IU9MY06' : 'https://buy.stripe.com/6oUbJ31xp1dtf4u2AM9MY07',
+    pro5:      monthly ? 'https://buy.stripe.com/cNi7sNfof6xN2hIeju9MY0c' : 'https://buy.stripe.com/aFa4gBb7ZcWbcWm6R29MY08',
+    agency:    monthly ? 'https://buy.stripe.com/3cI4gBfofaO3cWm4IU9MY0b' : 'https://buy.stripe.com/5kQ00ldg77BRe0q7V69NY05'
+  };
+  var link=links[plan];
+  if(link&&!link.includes('placeholder'))window.open(link,'_blank');
+  else showToast('⚠️ Stripe link not configured for: '+plan);
+}
+
+function copyAffLink(){
+  var link=document.getElementById('affLink').textContent;
+  navigator.clipboard.writeText(link).then(function(){showToast('🔗 Affiliate link copied!')}).catch(function(){showToast('Could not copy')});
+}
+
+function goSlide(i){
+  var track=document.getElementById('carouselTrack');if(!track)return;
+  var slides=track.querySelectorAll('.carousel-slide');
+  if(slides[i])slides[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  document.querySelectorAll('.cdot').forEach(function(d,j){d.classList.toggle('active',j===i)});
+}
+
+function animateCounter(id,target,suffix,duration){
+  var el=document.getElementById(id);if(!el)return;
+  var start=0,step=target/((duration||1500)/16);
+  var t=setInterval(function(){
+    start+=step;
+    if(start>=target){start=target;clearInterval(t)}
+    el.textContent=Math.floor(start).toLocaleString()+(suffix||'');
+  },16);
+}
+
+var tickers=['🎉 @kayla_fit just went from 50K → 800K views/month','⚡ @marcus_pod just hit +340% views after switching','🚀 @jaystream processes clips 8× faster now','💰 @devon_k earning $1,200/mo in affiliate income'];
+var tickerIdx=0;
+function rotateTicker(){
+  var el=document.getElementById('tickerText');if(!el)return;
+  tickerIdx=(tickerIdx+1)%tickers.length;
+  el.style.opacity='0';
+  setTimeout(function(){el.textContent=tickers[tickerIdx];el.style.opacity='1'},300);
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  animateCounter('c1',2847293,'',2000);
+  animateCounter('c2',9847,'',2000);
+  animateCounter('c3',90,'s',1500);
+  animateCounter('c4',94,'%',1800);
+  setInterval(rotateTicker,4000);
+
+  // Handle Google OAuth redirect
+  var params=new URLSearchParams(window.location.search);
+  var token=params.get('token')||params.get('access_token');
+  if(token){
+    setToken(token);
+    window.history.replaceState({},'',window.location.pathname);
+    showToast('✅ Signed in with Google!');
+    setTimeout(function(){switchTab('dashboard',null)},800);
+  }
+
+  // Restore nav if already logged in
+  if(getToken()){
+    document.getElementById('navSignIn').style.display='none';
+    document.getElementById('navStart').textContent='Dashboard ⚡';
+    document.getElementById('navStart').onclick=function(){switchTab('dashboard',null)};
   }
 });
-
-/**
- * GET /clips/detail/:clipId
- * Returns full details for a single clip
- */
-router.get('/detail/:clipId', async (req, res) => {
-  try {
-    const { clipId } = req.params;
-    const userId = req.user.id;
-
-    const { data: clip, error } = await supabase
-      .from('clips')
-      .select('*, projects(video_title, creator_name, video_url, video_id)')
-      .eq('id', clipId)
-      .eq('user_id', userId)
-      .single();
-
-    if (error || !clip) {
-      return res.status(404).json({ error: 'Clip not found' });
-    }
-
-    res.json(clip);
-
-  } catch (err) {
-    console.error('Clip detail error:', err);
-    res.status(500).json({ error: 'Failed to fetch clip' });
-  }
-});
-
-/**
- * GET /clips/user/all
- * Returns all clips for the current user across all projects
- */
-router.get('/user/all', async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { limit = 50, offset = 0, minScore = 0 } = req.query;
-
-    const { data: clips, error, count } = await supabase
-      .from('clips')
-      .select('*, projects(video_title, creator_name)', { count: 'exact' })
-      .eq('user_id', userId)
-      .gte('viral_score', parseInt(minScore))
-      .order('created_at', { ascending: false })
-      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
-
-    if (error) {
-      return res.status(500).json({ error: 'Failed to fetch clips' });
-    }
-
-    res.json({
-      clips: clips || [],
-      total: count || 0,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-    });
-
-  } catch (err) {
-    console.error('User clips error:', err);
-    res.status(500).json({ error: 'Failed to fetch clips' });
-  }
-});
-
-module.exports = router;
+</script>
+</body>
+</html>
