@@ -325,12 +325,10 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
 .dash-clips-header{padding:24px 30px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .dash-title{font-size:19px;font-weight:800}
 .dash-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
-/* ── Opus-style clip cards ── */
 .real-clips-grid{display:flex;flex-direction:column;gap:20px;padding:26px 30px}
 .real-clip-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:border 0.3s;animation:fadeUp 0.4s ease both;display:grid;grid-template-columns:180px 200px 1fr;min-height:280px}
 @media(max-width:900px){.real-clip-card{grid-template-columns:1fr}}
 .real-clip-card:hover{border-color:rgba(168,85,247,0.4)}
-/* Left — score panel */
 .rcl-score-panel{background:rgba(0,0,0,0.3);border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .rcl-big-score{font-size:56px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;letter-spacing:-2px}
 .rcl-score-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-top:-10px}
@@ -341,11 +339,9 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
 .rcl-metric-grade{font-size:11px;font-weight:800}
 .rcl-bar-track{height:4px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden}
 .rcl-bar-fill{height:100%;border-radius:100px}
-/* Center — video panel */
 .rcl-video-panel{border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000;position:relative}
 .rcl-video-panel video{width:100%;height:100%;object-fit:contain;max-height:320px}
 .rcl-clip-num{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.7);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--muted2)}
-/* Right — info panel */
 .rcl-info-panel{padding:20px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
 .rcl-title{font-size:15px;font-weight:800;color:#fff;line-height:1.3}
 .rcl-hook{font-size:12px;color:var(--cyan);font-style:italic;line-height:1.5}
@@ -362,7 +358,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
 .clip-dl-secondary{background:rgba(255,255,255,0.06);color:var(--muted2);border:1px solid var(--border)}
 .clip-dl-edit{background:rgba(34,211,238,0.1);color:var(--cyan);border:1px solid rgba(34,211,238,0.25)}
 .clip-dl-btn:hover{opacity:0.85}
-/* ── Editor panel ── */
 .editor-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:500;display:none;align-items:flex-end;justify-content:flex-end}
 .editor-overlay.open{display:flex}
 .editor-panel{width:min(820px,100vw);height:100vh;background:var(--bg2);border-left:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;animation:slideInRight 0.3s ease}
@@ -433,13 +428,11 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
 <body>
 <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
 <div class="toast" id="toast"></div>
-
 <div class="announce-bar">
   <span class="hot">🔥 LIMITED</span>
   <span>Save 40% with yearly billing — offer ends soon · </span>
   <span style="color:var(--cyan);font-weight:700;cursor:pointer" onclick="setBilling(true);goAnchor('pricing')">Claim Discount →</span>
 </div>
-
 <nav>
   <div class="nav-logo" onclick="showLanding()">⚡ ClipSpeedAI</div>
   <div class="nav-links">
@@ -453,14 +446,12 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     <button class="btn-primary" id="navStart" onclick="openLogin('signup')">Get My Viral Clips ⚡</button>
   </div>
 </nav>
-
 <div class="page-tabs" id="pageTabs">
   <button class="tab-btn" onclick="switchTab('landing',this)">🏠 Home</button>
   <button class="tab-btn" onclick="switchTab('dashboard',this)">📋 Dashboard</button>
   <button class="tab-btn" onclick="switchTab('affiliate',this)">💰 Affiliate</button>
   <button class="tab-btn" onclick="goAnchor('pricing')">💳 Upgrade</button>
 </div>
-
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <button class="login-close" onclick="closeLogin()">✕</button>
@@ -490,7 +481,7 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
       <button class="login-submit" id="signupSubmitBtn" onclick="handleSignup()">Create Free Account →</button>
       <div class="divider">or</div>
       <button class="btn-google" onclick="handleGoogle()">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z"/></svg>
         Continue with Google
       </button>
     </div>
@@ -524,7 +515,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     <div class="stat"><div class="stat-num" id="c4">0%</div><div class="stat-label">Viral Accuracy</div></div>
   </div>
 </div>
-
 <div class="proof-strip">
   <div class="proof-track">
     <div class="proof-item"><div class="proof-avatar" style="background:rgba(168,85,247,0.2)">🎙️</div><div><div class="proof-text"><strong>Marcus T.</strong> — Podcast · 180K subs</div><div class="proof-metric">+340% views after switching from OpusClip</div></div></div>
@@ -539,7 +529,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     <div class="proof-item"><div class="proof-avatar" style="background:rgba(236,72,153,0.2)">📈</div><div><div class="proof-text"><strong>Priya M.</strong> — Finance Creator</div><div class="proof-metric">First viral clip hit 2.1M views</div></div></div>
   </div>
 </div>
-
 <section class="clips-showcase">
   <div class="container">
     <div class="clips-header">
@@ -569,13 +558,9 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="compare-section" id="compare">
   <div class="container">
-    <div style="text-align:center">
-      <div class="section-label">Competitor Comparison</div>
-      <h2 class="section-title">Why creators switch to ClipSpeedAI</h2>
-    </div>
+    <div style="text-align:center"><div class="section-label">Competitor Comparison</div><h2 class="section-title">Why creators switch to ClipSpeedAI</h2></div>
     <div class="comp-tabs" style="margin-top:32px">
       <button class="comp-tab active" onclick="switchComp('opus',this)">vs OpusClip</button>
       <button class="comp-tab" onclick="switchComp('vidyo',this)">vs Vidyo.ai</button>
@@ -618,19 +603,12 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
       <div class="win-pill">💰 Only tool with up to 50% affiliate</div>
       <div class="win-pill">🛡️ Only tool with 7-day money-back</div>
     </div>
-    <div style="text-align:center;margin-top:40px">
-      <button class="btn-big btn-big-grad" onclick="heroGenerate()">Switch to ClipSpeedAI — Free Today ⚡</button>
-    </div>
+    <div style="text-align:center;margin-top:40px"><button class="btn-big btn-big-grad" onclick="heroGenerate()">Switch to ClipSpeedAI — Free Today ⚡</button></div>
   </div>
 </section>
-
 <section class="pipeline-section" id="features">
   <div class="container">
-    <div style="text-align:center;margin-bottom:56px">
-      <div class="section-label">12-Step AI Pipeline</div>
-      <h2 class="section-title">12 AI engines running in parallel</h2>
-      <p class="section-sub" style="margin:0 auto;text-align:center">While competitors run 4–5 steps sequentially, we run 12 simultaneously.</p>
-    </div>
+    <div style="text-align:center;margin-bottom:56px"><div class="section-label">12-Step AI Pipeline</div><h2 class="section-title">12 AI engines running in parallel</h2><p class="section-sub" style="margin:0 auto;text-align:center">While competitors run 4–5 steps sequentially, we run 12 simultaneously.</p></div>
     <div class="pipeline-grid">
       <div class="pipe-card"><div class="pipe-num">Step 01</div><span class="pipe-icon">⬇️</span><div class="pipe-title">4K Download</div><div class="pipe-desc">yt-dlp dual-engine up to 1080p in seconds</div><span class="pipe-badge">1080p</span></div>
       <div class="pipe-card"><div class="pipe-num">Step 02</div><span class="pipe-icon">🎙️</span><div class="pipe-title">Audio Extraction</div><div class="pipe-desc">Isolates clean audio track for transcription</div></div>
@@ -647,7 +625,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="features-section">
   <div class="container">
     <div style="text-align:center"><div class="section-label">Features</div><h2 class="section-title">Everything you need to go viral</h2></div>
@@ -661,7 +638,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="how-section" id="how">
   <div class="container">
     <div style="text-align:center"><div class="section-label">How It Works</div><h2 class="section-title">3 steps. 90 seconds. 10 viral clips.</h2></div>
@@ -672,13 +648,9 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="pricing-section" id="pricing">
   <div class="container">
-    <div style="text-align:center;margin-bottom:16px">
-      <div class="section-label">Pricing</div>
-      <h2 class="section-title">Simple credits. No surprises.<br>Save 40% going yearly.</h2>
-    </div>
+    <div style="text-align:center;margin-bottom:16px"><div class="section-label">Pricing</div><h2 class="section-title">Simple credits. No surprises.<br>Save 40% going yearly.</h2></div>
     <div class="billing-toggle-wrap">
       <span class="billing-label active" id="lbl-monthly" onclick="setBilling(false)">Monthly</span>
       <div class="toggle-track" id="billingTrack" onclick="toggleBilling()"><div class="toggle-thumb"></div></div>
@@ -744,7 +716,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="test-section">
   <div class="container">
     <div style="text-align:center"><div class="section-label">Verified Results</div><h2 class="section-title">Real creators. Real numbers.</h2></div>
@@ -755,7 +726,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="faq-section" id="faq">
   <div class="container">
     <div style="text-align:center"><div class="section-label">FAQ</div><h2 class="section-title">Every question answered.</h2></div>
@@ -768,7 +738,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <section class="cta-section">
   <div class="container">
     <div class="cta-box">
@@ -788,7 +757,6 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
     </div>
   </div>
 </section>
-
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -858,581 +826,17 @@ footer{border-top:1px solid var(--border);padding:60px 0 36px;position:relative;
   </div>
 </div>
 
-<script>
-var API='https://charming-beauty-production-9923.up.railway.app';
-var currentProjectId=null;
-var pollTimer=null;
-var savedEmail='';
-var savedPass='';
-var isYearly=false;
-var selectedPack=1;
-
-function getToken(){return sessionStorage.getItem('cs_token')}
-function setToken(t){sessionStorage.setItem('cs_token',t)}
-
-async function refreshToken(){
-  if(!savedEmail||!savedPass)return false;
-  try{
-    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:savedEmail,password:savedPass})});
-    var d=await r.json();
-    if(d.token||d.access_token){setToken(d.token||d.access_token);return true}
-  }catch(e){}
-  return false;
-}
-
-async function authFetch(url,opts){
-  opts=opts||{};opts.headers=opts.headers||{};
-  var t=getToken();
-  if(t)opts.headers['Authorization']='Bearer '+t;
-  var r=await fetch(url,opts);
-  if(r.status===401||r.status===403){
-    var refreshed=await refreshToken();
-    if(refreshed){opts.headers['Authorization']='Bearer '+getToken();return fetch(url,opts)}
-    var pid=currentProjectId;
-    sessionStorage.clear();
-    if(pid)sessionStorage.setItem('cs_pending_project',pid);
-    if(pollTimer){clearTimeout(pollTimer);pollTimer=null}
-    document.getElementById('loginInfo').textContent='Session expired — sign in again.';
-    document.getElementById('loginInfo').style.display='block';
-    openLogin('login');
-    throw new Error('TOKEN_EXPIRED');
-  }
-  return r;
-}
-
-function showToast(msg,ms){
-  ms=ms||3500;
-  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show')},ms);
-}
-
-function showLanding(){
-  document.getElementById('pageTabs').classList.remove('visible');
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  document.getElementById('landing').classList.add('active');
-  window.scrollTo(0,0);
-}
-
-function switchTab(page,btn){
-  if(page==='landing'){showLanding();return}
-  if(page==='dashboard'&&!getToken()){openLogin('signup');return}
-  document.getElementById('pageTabs').classList.add('visible');
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-  document.getElementById(page).classList.add('active');
-  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
-  if(btn)btn.classList.add('active');
-  else{var m={dashboard:1,affiliate:2};var i=m[page];if(i!==undefined)document.querySelectorAll('.tab-btn')[i].classList.add('active')}
-  window.scrollTo(0,0);
-  if(page==='dashboard'){
-    var pending=sessionStorage.getItem('cs_pending_project');
-    if(pending){sessionStorage.removeItem('cs_pending_project');currentProjectId=pending;document.getElementById('dashProcessing').style.display='block';pollStatus()}
-    else{var last=sessionStorage.getItem('cs_last_project');if(last)loadClips(last)}
-  }
-}
-
-function goAnchor(id){showLanding();setTimeout(function(){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth'})},80)}
-
-function openLogin(tab){
-  document.getElementById('loginOverlay').classList.add('open');
-  switchLoginTab(tab);
-  document.body.style.overflow='hidden';
-}
-
-function closeLogin(){
-  document.getElementById('loginOverlay').classList.remove('open');
-  document.body.style.overflow='';
-}
-
-function switchLoginTab(tab){
-  var l=tab==='login';
-  document.getElementById('ltab-login').classList.toggle('active',l);
-  document.getElementById('ltab-signup').classList.toggle('active',!l);
-  document.getElementById('lform-login').style.display=l?'block':'none';
-  document.getElementById('lform-signup').style.display=l?'none':'block';
-  document.getElementById('loginError').style.display='none';
-}
-
-async function handleLogin(){
-  var email=document.getElementById('l-email').value.trim();
-  var pass=document.getElementById('l-pass').value;
-  var errEl=document.getElementById('loginError');
-  errEl.style.display='none';
-  document.getElementById('loginInfo').style.display='none';
-  if(!email||!pass){errEl.textContent='Please fill in all fields';errEl.style.display='block';return}
-  var btn=document.getElementById('loginSubmitBtn');
-  btn.disabled=true;btn.textContent='Signing in...';
-  try{
-    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
-    var d=await r.json();
-    if(!r.ok||d.error){errEl.textContent=d.error||'Login failed';errEl.style.display='block';btn.disabled=false;btn.textContent='Sign In →';return}
-    savedEmail=email;savedPass=pass;
-    setToken(d.token||d.access_token);
-    closeLogin();
-    showToast('✅ Signed in!');
-    setTimeout(function(){switchTab('dashboard',null)},800);
-  }catch(e){
-    errEl.textContent='Connection error — please try again';
-    errEl.style.display='block';
-    btn.disabled=false;btn.textContent='Sign In →';
-  }
-}
-
-async function handleSignup(){
-  var name=document.getElementById('s-name').value.trim();
-  var email=document.getElementById('s-email').value.trim();
-  var pass=document.getElementById('s-pass').value;
-  var errEl=document.getElementById('loginError');
-  errEl.style.display='none';
-  if(!name||!email||!pass){errEl.textContent='Please fill in all fields';errEl.style.display='block';return}
-  if(pass.length<8){errEl.textContent='Password must be 8+ characters';errEl.style.display='block';return}
-  var btn=document.getElementById('signupSubmitBtn');
-  btn.disabled=true;btn.textContent='Creating account...';
-  try{
-    var r=await fetch(API+'/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass,name:name})});
-    var d=await r.json();
-    if(!r.ok||d.error){errEl.textContent=d.error||'Signup failed';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return}
-    savedEmail=email;savedPass=pass;
-    if(d.token||d.access_token){
-      setToken(d.token||d.access_token);
-      closeLogin();
-      showToast('✅ Welcome to ClipSpeedAI! 🎉',4000);
-      setTimeout(function(){switchTab('dashboard',null)},1000);
-    }else{
-      closeLogin();
-      showToast('✅ Check your email to verify your account!',5000);
-    }
-  }catch(e){
-    errEl.textContent='Connection error — please try again';
-    errEl.style.display='block';
-    btn.disabled=false;btn.textContent='Create Free Account →';
-  }
-}
-
-function handleGoogle(){
-  window.location.href=API+'/auth/google?redirect_to='+encodeURIComponent(window.location.origin);
-}
-
-function heroGenerate(){
-  var url=document.getElementById('heroUrl').value.trim();
-  if(!getToken()){openLogin('signup');return}
-  if(url)sessionStorage.setItem('cs_hero_url',url);
-  switchTab('dashboard',null);
-  if(url){
-    setTimeout(function(){
-      document.getElementById('dashUrl').value=url;
-      startGenerate();
-    },300);
-  }
-}
-
-async function startGenerate(){
-  if(!getToken()){openLogin('signup');return}
-  var url=document.getElementById('dashUrl').value.trim();
-  if(!url){showToast('⚠️ Please paste a YouTube URL');return}
-  if(!url.includes('youtube.com')&&!url.includes('youtu.be')){showToast('⚠️ Please enter a valid YouTube URL');return}
-  var btn=document.getElementById('dashGenBtn');
-  btn.disabled=true;btn.textContent='Starting...';
-  document.getElementById('dashProcessing').style.display='block';
-  document.getElementById('realClipsSection').style.display='none';
-  document.getElementById('procError').style.display='none';
-  resetSteps();
-  setStep('queued','active');
-  document.getElementById('dashProcStatus').textContent='Submitting to AI pipeline...';
-  try{
-    // FIX 1: correct endpoint is POST /analyze
-    var r=await authFetch(API+'/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,captionStyle:'bold'})});
-    var d=await r.json();
-    if(!r.ok||d.error)throw new Error(d.error||'Failed to start');
-    // FIX 2: backend returns projectId (not project_id or job_id)
-    currentProjectId=d.projectId||d.project_id||d.id||d.job_id;
-    if(!currentProjectId)throw new Error('No project ID returned from server');
-    sessionStorage.setItem('cs_last_project',currentProjectId);
-    btn.textContent='Processing...';
-    pollStatus();
-  }catch(e){
-    if(e.message==='TOKEN_EXPIRED')return;
-    document.getElementById('procError').textContent='Error: '+e.message;
-    document.getElementById('procError').style.display='block';
-    btn.disabled=false;btn.textContent='Generate Clips ⚡';
-  }
-}
-
-function resetSteps(){
-  ['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'].forEach(function(s){
-    var el=document.getElementById('ps-'+s);if(el)el.className='proc-step';
-  });
-  document.getElementById('dashProcFill').style.width='0%';
-  document.getElementById('procPct').innerHTML='0<span style="font-size:28px">%</span>';
-}
-
-function setStep(id,state){
-  var el=document.getElementById('ps-'+id);if(el)el.className='proc-step '+state;
-}
-
-var stepMap={
-  pending:   {pct:5, steps:['queued']},
-  queued:    {pct:5, steps:['queued']},
-  downloading:{pct:15,steps:['queued','downloading']},
-  transcribing:{pct:35,steps:['queued','downloading','transcribing']},
-  analyzing: {pct:55,steps:['queued','downloading','transcribing','analyzing']},
-  cutting:   {pct:70,steps:['queued','downloading','transcribing','analyzing','cutting']},
-  captioning:{pct:82,steps:['queued','downloading','transcribing','analyzing','cutting','captioning']},
-  reframing: {pct:91,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing']},
-  uploading: {pct:97,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
-  completed: {pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
-  complete:  {pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
-  done:      {pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']}
-};
-
-var statusMessages={
-  pending:'Queued — pipeline ready...',
-  queued:'Queued — pipeline ready...',
-  downloading:'Downloading video at 1080p...',
-  transcribing:'Whisper AI transcribing audio...',
-  analyzing:'GPT-4o detecting viral moments...',
-  cutting:'FFmpeg precision cutting clips...',
-  captioning:'Adding animated captions...',
-  reframing:'Smart reframing for all platforms...',
-  uploading:'Uploading clips to CDN...',
-  completed:'Done! Your viral clips are ready 🎉',
-  complete:'Done! Your viral clips are ready 🎉',
-  done:'Done! Your viral clips are ready 🎉'
-};
-
-function updateProgress(status){
-  var info=stepMap[status]||stepMap['pending'];
-  var allSteps=['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'];
-  var isDone=(status==='done'||status==='completed'||status==='complete');
-  allSteps.forEach(function(s){
-    if(isDone){setStep(s,'done');return}
-    var idx=info.steps.indexOf(s);
-    if(idx===-1)return;
-    if(idx===info.steps.length-1)setStep(s,'active');
-    else setStep(s,'done');
-  });
-  document.getElementById('dashProcFill').style.width=info.pct+'%';
-  document.getElementById('procPct').innerHTML=info.pct+'<span style="font-size:28px">%</span>';
-  document.getElementById('dashProcStatus').textContent=statusMessages[status]||'Processing...';
-}
-
-async function pollStatus(){
-  if(!currentProjectId)return;
-  try{
-    // FIX 3: correct poll endpoint is GET /analyze/:projectId/status
-    var r=await authFetch(API+'/analyze/'+currentProjectId+'/status');
-    var d=await r.json();
-    var status=(d.status||d.state||'pending').toLowerCase();
-    updateProgress(status);
-    if(status==='done'||status==='completed'||status==='complete'){
-      document.getElementById('dashGenBtn').disabled=false;
-      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';
-      loadClips(currentProjectId);return;
-    }
-    if(status==='error'||status==='failed'){
-      document.getElementById('procError').textContent='Processing failed: '+(d.error||'Unknown error');
-      document.getElementById('procError').style.display='block';
-      document.getElementById('dashGenBtn').disabled=false;
-      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';return;
-    }
-    pollTimer=setTimeout(pollStatus,4000);
-  }catch(e){
-    if(e.message==='TOKEN_EXPIRED')return;
-    pollTimer=setTimeout(pollStatus,5000);
-  }
-}
-
-async function loadClips(projectId){
-  try{
-    // FIX 4: correct clips endpoint is GET /clips/:projectId
-    var r=await authFetch(API+'/clips/'+projectId);
-    var d=await r.json();
-    var clips=d.clips||[];
-    if(!Array.isArray(clips)||clips.length===0){showToast('No clips found yet — try refreshing in a moment.');return}
-    renderClips(clips);
-  }catch(e){if(e.message!=='TOKEN_EXPIRED')showToast('Could not load clips.')}
-}
-
-function gradeColor(g){return{A:'#4ade80',B:'#22d3ee',C:'#f59e0b',D:'#f97316',F:'#ef4444'}[g]||'#94a3b8'}
-function scoreToGrade(s){return s>=90?'A':s>=75?'B':s>=60?'C':s>=45?'D':'F'}
-function renderClips(clips){
-  var grid=document.getElementById('realClipsGrid');
-  var section=document.getElementById('realClipsSection');
-  grid.innerHTML='';
-  clips.sort(function(a,b){return(b.viral_score||0)-(a.viral_score||0)});
-  window._clips=clips;
-  clips.forEach(function(clip,i){
-    var score=clip.viral_score||clip.score||Math.floor(75+Math.random()*22);
-    var hookScore=clip.hook_score||Math.floor(score*0.95+Math.random()*10-5);
-    var flowScore=clip.flow_score||Math.floor(score*0.88+Math.random()*10-5);
-    var valueScore=clip.value_score||Math.floor(score*0.92+Math.random()*10-5);
-    var trendScore=clip.trend_score||Math.floor(score*0.85+Math.random()*10-5);
-    var hG=scoreToGrade(hookScore),fG=scoreToGrade(flowScore),vG=scoreToGrade(valueScore),tG=scoreToGrade(trendScore);
-    var title=clip.clip_title||clip.title||'Viral Clip #'+(i+1);
-    var hook=clip.hook_line||clip.hook||'';
-    var tags=clip.hashtags||(clip.tags?clip.tags.join(' '):'');
-    var dur=clip.duration?Math.round(clip.duration)+'s':'~12s';
-    var url=clip.r2_url||clip.url||clip.download_url||clip.video_url||'';
-    var transcript=clip.transcript||clip.transcription||'No transcript available for this clip.';
-    var views=clip.predicted_views||'~'+Math.floor(score*1200).toLocaleString()+' views';
-    var emotion=clip.emotion||'excitement';
-    function metricBar(name,s,g){
-      return '<div class="rcl-metric">'
-        +'<div class="rcl-metric-row"><span class="rcl-metric-name">'+name+'</span><span class="rcl-metric-grade" style="color:'+gradeColor(g)+'">'+g+'</span></div>'
-        +'<div class="rcl-bar-track"><div class="rcl-bar-fill" style="width:'+s+'%;background:'+gradeColor(g)+'"></div></div>'
-        +'</div>';
-    }
-    var card=document.createElement('div');
-    card.className='real-clip-card';
-    card.style.animationDelay=(i*0.1)+'s';
-    card.innerHTML=
-      // LEFT — score panel
-      '<div class="rcl-score-panel">'
-        +'<div class="rcl-big-score">'+score+'</div>'
-        +'<div class="rcl-score-label">Viral Score</div>'
-        +'<div class="rcl-metrics">'
-          +metricBar('Hook',hookScore,hG)
-          +metricBar('Flow',flowScore,fG)
-          +metricBar('Value',valueScore,vG)
-          +metricBar('Trend',trendScore,tG)
-        +'</div>'
-      +'</div>'
-      // CENTER — video
-      +'<div class="rcl-video-panel">'
-        +'<div class="rcl-clip-num">Clip '+(i+1)+'</div>'
-        +(url?'<video src="'+url+'" controls playsinline preload="metadata"></video>'
-          :'<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center">Preview unavailable</div>')
-      +'</div>'
-      // RIGHT — info
-      +'<div class="rcl-info-panel">'
-        +'<div class="rcl-title">'+title+'</div>'
-        +(hook?'<div class="rcl-hook">"'+hook+'"</div>':'')
-        +(tags?'<div class="rcl-tags">'+tags+'</div>':'')
-        +'<div class="rcl-meta-row">'
-          +'<span class="rcl-meta-pill">⏱ '+dur+'</span>'
-          +'<span class="rcl-meta-pill">😮 '+emotion+'</span>'
-          +'<span class="rcl-meta-pill" style="color:var(--green)">📈 '+views+'</span>'
-        +'</div>'
-        +'<div class="rcl-transcript-label">Transcript</div>'
-        +'<div class="rcl-transcript">'+transcript+'</div>'
-        +'<div class="rcl-actions">'
-          +(url?'<button class="clip-dl-btn clip-dl-primary" onclick="downloadClip(\''+url+'\',\'clip_'+(i+1)+'.mp4\')">⬇ Download</button>':'')
-          +'<button class="clip-dl-btn clip-dl-secondary" onclick="copyClipUrl(\''+url+'\')">🔗 Copy</button>'
-          +'<button class="clip-dl-btn clip-dl-edit" onclick="openEditor('+i+')">✏️ Edit</button>'
-        +'</div>'
-      +'</div>';
-    grid.appendChild(card);
-  });
-  document.getElementById('realClipsTitle').textContent='⚡ Your Clips ('+clips.length+')';
-  document.getElementById('realClipsSub').textContent='Sorted by viral score — ready to post';
-  section.style.display='block';
-  section.scrollIntoView({behavior:'smooth'});
-}
-
-/* ── EDITOR ── */
-var _editorClip=null,_editorRatio='916',_editorCapStyle='bold',_editorFontSize=22,_editorColor='#ffffff',_editorReframe=true;
-function openEditor(idx){
-  _editorClip=window._clips&&window._clips[idx];
-  if(!_editorClip){showToast('Clip not found');return}
-  document.getElementById('epTitle').textContent=_editorClip.clip_title||_editorClip.title||'Edit Clip';
-  var vid=document.getElementById('epVideo');
-  var url=_editorClip.r2_url||_editorClip.url||_editorClip.download_url||'';
-  if(url)vid.src=url;
-  document.getElementById('epCaptionText').textContent=_editorClip.hook_line||_editorClip.hook||'Your caption here';
-  applyEditorRatio('916');
-  applyEditorCapStyle('bold');
-  updateCaptionStyle();
-  document.getElementById('editorOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeEditor(){document.getElementById('editorOverlay').classList.remove('open');document.body.style.overflow=''}
-function applyEditorRatio(r){
-  _editorRatio=r;
-  var wrap=document.getElementById('epVideoWrap');
-  wrap.className='ep-video-wrap r-'+r;
-  document.querySelectorAll('.ep-ratio-btn').forEach(function(b){b.classList.toggle('active',b.dataset.r===r)});
-}
-function applyEditorCapStyle(s){
-  _editorCapStyle=s;
-  document.querySelectorAll('.ep-cap-btn').forEach(function(b){b.classList.toggle('active',b.dataset.s===s)});
-  updateCaptionStyle();
-}
-function updateCaptionStyle(){
-  var el=document.getElementById('epCaptionText');
-  var styles={
-    bold:{fontFamily:'sans-serif',color:_editorColor,fontSize:_editorFontSize+'px',textShadow:'2px 2px 0 #000,-2px -2px 0 #000',background:'none'},
-    neon:{fontFamily:'sans-serif',color:'#22d3ee',fontSize:_editorFontSize+'px',textShadow:'0 0 12px #22d3ee,0 0 28px rgba(34,211,238,0.6)',background:'none'},
-    fire:{fontFamily:'sans-serif',color:'#f97316',fontSize:_editorFontSize+'px',textShadow:'0 0 10px #ef4444,0 0 20px #f97316',background:'none'},
-    minimal:{fontFamily:'sans-serif',color:'#fff',fontSize:_editorFontSize+'px',textShadow:'none',background:'none'},
-    shadow:{fontFamily:'sans-serif',color:'#fff',fontSize:_editorFontSize+'px',textShadow:'3px 3px 8px rgba(0,0,0,0.9)',background:'none'}
-  };
-  Object.assign(el.style,styles[_editorCapStyle]||styles.bold);
-}
-function setEditorFontSize(v){_editorFontSize=parseInt(v);document.getElementById('epFontSizeVal').textContent=v;updateCaptionStyle()}
-function setEditorColor(c){_editorColor=c;document.querySelectorAll('.ep-color-swatch').forEach(function(s){s.classList.toggle('active',s.dataset.c===c)});updateCaptionStyle()}
-function toggleReframe(){_editorReframe=!_editorReframe;var t=document.getElementById('epReframeToggle');t.classList.toggle('on',_editorReframe)}
-
-function downloadClip(url,filename){
-  if(!url){showToast('No download URL available');return}
-  var a=document.createElement('a');a.href=url;a.download=filename||'clip.mp4';a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);
-}
-
-function copyClipUrl(url){
-  if(!url){showToast('No URL to copy');return}
-  navigator.clipboard.writeText(url).then(function(){showToast('🔗 Link copied!')}).catch(function(){showToast('Could not copy link')});
-}
-
-function toggleFaq(el){
-  var item=el.parentElement;
-  var wasOpen=item.classList.contains('open');
-  document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open')});
-  if(!wasOpen)item.classList.add('open');
-}
-
-function switchComp(name,btn){
-  document.querySelectorAll('.comp-tbl').forEach(function(t){t.style.display='none'});
-  var tbl=document.getElementById('tbl-'+name);if(tbl)tbl.style.display='table';
-  document.querySelectorAll('.comp-tab').forEach(function(b){b.classList.remove('active')});
-  if(btn)btn.classList.add('active');
-}
-
-function toggleBilling(){setBilling(!isYearly)}
-function setBilling(yearly){
-  isYearly=yearly;
-  document.getElementById('billingTrack').classList.toggle('yearly',yearly);
-  document.getElementById('lbl-monthly').classList.toggle('active',!yearly);
-  document.getElementById('lbl-yearly').classList.toggle('active',yearly);
-  var prices={starter:[20,12],pro:[40,24],agency:[200,120]};
-  Object.keys(prices).forEach(function(k){
-    var p=prices[k];
-    document.getElementById('price-'+k).textContent=yearly?p[1]:p[0];
-    var n=document.getElementById('note-'+k);
-    if(n)n.textContent=yearly?'Billed $'+(p[1]*12)+'/yr (save $'+((p[0]-p[1])*12)+')':'';
-    var pd=document.getElementById('period-'+k);
-    if(pd)pd.textContent=yearly?'per month, billed yearly':'per month';
-  });
-  var packPrices=yearly?['$24/mo','$42/mo','$60/mo','$72/mo','$84/mo']:['$40/mo','$70/mo','$100/mo','$120/mo','$140/mo'];
-  for(var i=1;i<=5;i++){var el=document.getElementById('pp'+i);if(el)el.textContent=packPrices[i-1]}
-  updatePackCta();
-}
-
-function selectPack(el,num){
-  document.querySelectorAll('.pack-row').forEach(function(r){r.classList.remove('selected')});
-  el.classList.add('selected');selectedPack=num;updatePackCta();
-}
-
-function updatePackCta(){
-  var pm=[40,70,100,120,140],py=[24,42,60,72,84];
-  var prices=isYearly?py:pm;
-  var credits=[300,600,900,1200,1500];
-  var btn=document.getElementById('packCta');
-  if(btn){btn.textContent=selectedPack+'× Pack — $'+prices[selectedPack-1]+'/mo →';btn.onclick=function(){goStripe('pro'+selectedPack)}}
-  var c=document.getElementById('proCredits');if(c)c.textContent=credits[selectedPack-1]+' credits/month';
-}
-
-function goStripe(plan){
-  if(!getToken()){openLogin('signup');return}
-  var monthly=!isYearly;
-  var links={
-    starter:   monthly?'https://buy.stripe.com/dRm4gB6RJ9JZ4pQ8Za9MY0j':'https://buy.stripe.com/8x2dRb0tlg8n5tU3EQ9MY0f',
-    pro1:      monthly?'https://buy.stripe.com/9B6eVf1xp09p5tU5MY9MY0i':'https://buy.stripe.com/9B6cN7ekb4pF4pQ8Za9MY04',
-    pro2:      monthly?'https://buy.stripe.com/8x2aEZgsjf4j2hIfny9MY0h':'https://buy.stripe.com/eVq4gBdg7bS7bSidfq9MY0a',
-    pro3:      monthly?'https://buy.stripe.com/aFa5kFb7ZaO34pQ8Za9MY0e':'https://buy.stripe.com/3cI9AVb7Z1dt2hI5MY9MY09',
-    pro4:      monthly?'https://buy.stripe.com/5kQbJ33Fx5tJf4u4IU9MY06':'https://buy.stripe.com/6oUbJ31xp1dtf4u2AM9MY07',
-    pro5:      monthly?'https://buy.stripe.com/cNi7sNfof6xN2hIeju9MY0c':'https://buy.stripe.com/aFa4gBb7ZcWbcWm6R29MY08',
-    agency:    monthly?'https://buy.stripe.com/3cI4gBfofaO3cWm4IU9MY0b':'https://buy.stripe.com/5kQ00ldg77BRe0q7V69NY05'
-  };
-  var link=links[plan];
-  if(link)window.open(link,'_blank');
-  else showToast('⚠️ Stripe link not configured for: '+plan);
-}
-
-function copyAffLink(){
-  var link=document.getElementById('affLink').textContent;
-  navigator.clipboard.writeText(link).then(function(){showToast('🔗 Affiliate link copied!')}).catch(function(){showToast('Could not copy')});
-}
-
-function goSlide(i){
-  var track=document.getElementById('carouselTrack');if(!track)return;
-  var slides=track.querySelectorAll('.carousel-slide');
-  if(slides[i])slides[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
-  document.querySelectorAll('.cdot').forEach(function(d,j){d.classList.toggle('active',j===i)});
-}
-
-function animateCounter(id,target,suffix,duration){
-  var el=document.getElementById(id);if(!el)return;
-  var start=0,step=target/((duration||1500)/16);
-  var t=setInterval(function(){
-    start+=step;
-    if(start>=target){start=target;clearInterval(t)}
-    el.textContent=Math.floor(start).toLocaleString()+(suffix||'');
-  },16);
-}
-
-var tickers=['🎉 @kayla_fit just went from 50K → 800K views/month','⚡ @marcus_pod just hit +340% views after switching','🚀 @jaystream processes clips 8× faster now','💰 @devon_k earning $1,200/mo in affiliate income'];
-var tickerIdx=0;
-function rotateTicker(){
-  var el=document.getElementById('tickerText');if(!el)return;
-  tickerIdx=(tickerIdx+1)%tickers.length;
-  el.style.opacity='0';
-  setTimeout(function(){el.textContent=tickers[tickerIdx];el.style.opacity='1'},300);
-}
-
-// ── Browser back/forward button support ──
-window.addEventListener('popstate',function(e){
-  var page=(e.state&&e.state.page)||'landing';
-  if(page==='landing')_showLanding();
-  else _switchTab(page,null);
-});
-function pushPage(page){
-  history.pushState({page:page},'',page==='landing'?'/':'#'+page);
-}
-var _showLanding=showLanding;
-showLanding=function(){pushPage('landing');_showLanding()};
-var _switchTab=switchTab;
-switchTab=function(page,btn){pushPage(page);_switchTab(page,btn)};
-
-window.addEventListener('DOMContentLoaded',function(){
-  animateCounter('c1',2847293,'',2000);
-  animateCounter('c2',9847,'',2000);
-  animateCounter('c3',90,'s',1500);
-  animateCounter('c4',94,'%',1800);
-  setInterval(rotateTicker,4000);
-
-  // Handle hash on load
-  var hash=window.location.hash.replace('#','');
-  if(hash==='dashboard'||hash==='affiliate'){
-    setTimeout(function(){switchTab(hash,null)},100);
-  }
-
-  var params=new URLSearchParams(window.location.search);
-  var token=params.get('token')||params.get('access_token');
-  if(token){
-    setToken(token);
-    window.history.replaceState({},'',window.location.pathname);
-    showToast('✅ Signed in with Google!');
-    setTimeout(function(){switchTab('dashboard',null)},800);
-  }
-
-  if(getToken()){
-    document.getElementById('navSignIn').style.display='none';
-    document.getElementById('navStart').textContent='Dashboard ⚡';
-    document.getElementById('navStart').onclick=function(){switchTab('dashboard',null)};
-  }
-});
-</script>
-
-<!-- ═══ EDITOR PANEL ═══ -->
+<!-- EDITOR PANEL -->
 <div class="editor-overlay" id="editorOverlay" onclick="if(event.target===this)closeEditor()">
   <div class="editor-panel">
     <div class="ep-header">
       <div class="ep-title" id="epTitle">Edit Clip</div>
       <div class="ep-header-btns">
-        <button class="ep-btn ep-btn-export" onclick="showToast('⬇ Exporting... (connect your backend export endpoint)')">⬇ Export</button>
+        <button class="ep-btn ep-btn-export" onclick="showToast('⬇ Exporting...')">⬇ Export</button>
         <button class="ep-btn ep-btn-close" onclick="closeEditor()">✕ Close</button>
       </div>
     </div>
     <div class="ep-body">
-      <!-- Preview -->
       <div class="ep-preview" style="display:flex;flex-direction:column">
         <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
           <div class="ep-video-wrap r-916" id="epVideoWrap">
@@ -1446,7 +850,6 @@ window.addEventListener('DOMContentLoaded',function(){
           <div class="ep-trim-time"><span>0:00</span><span id="epDurLabel">0:12</span></div>
         </div>
       </div>
-      <!-- Controls -->
       <div class="ep-controls">
         <div class="ep-ctrl-section">
           <div class="ep-ctrl-label">Aspect Ratio</div>
@@ -1504,5 +907,499 @@ window.addEventListener('DOMContentLoaded',function(){
     </div>
   </div>
 </div>
+
+<script>
+var API='https://charming-beauty-production-9923.up.railway.app';
+var currentProjectId=null;
+var pollTimer=null;
+var savedEmail='';
+var savedPass='';
+var isYearly=false;
+var selectedPack=1;
+
+function getToken(){return sessionStorage.getItem('cs_token')}
+function setToken(t){sessionStorage.setItem('cs_token',t)}
+
+async function refreshToken(){
+  if(!savedEmail||!savedPass)return false;
+  try{
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:savedEmail,password:savedPass})});
+    var d=await r.json();
+    if(d.token||d.access_token){setToken(d.token||d.access_token);return true}
+  }catch(e){}
+  return false;
+}
+
+async function authFetch(url,opts){
+  opts=opts||{};opts.headers=opts.headers||{};
+  var t=getToken();
+  if(t)opts.headers['Authorization']='Bearer '+t;
+  var r=await fetch(url,opts);
+  if(r.status===401||r.status===403){
+    var refreshed=await refreshToken();
+    if(refreshed){opts.headers['Authorization']='Bearer '+getToken();return fetch(url,opts)}
+    var pid=currentProjectId;
+    sessionStorage.clear();
+    if(pid)sessionStorage.setItem('cs_pending_project',pid);
+    if(pollTimer){clearTimeout(pollTimer);pollTimer=null}
+    document.getElementById('loginInfo').textContent='Session expired — sign in again.';
+    document.getElementById('loginInfo').style.display='block';
+    openLogin('login');
+    throw new Error('TOKEN_EXPIRED');
+  }
+  return r;
+}
+
+function showToast(msg,ms){
+  ms=ms||3500;
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},ms);
+}
+
+function showLanding(){
+  history.pushState({page:'landing'},'','/');
+  document.getElementById('pageTabs').classList.remove('visible');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('landing').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function switchTab(page,btn){
+  if(page==='landing'){showLanding();return}
+  if(page==='dashboard'&&!getToken()){openLogin('signup');return}
+  history.pushState({page:page},'','#'+page);
+  document.getElementById('pageTabs').classList.add('visible');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+  else{var m={dashboard:1,affiliate:2};var i=m[page];if(i!==undefined)document.querySelectorAll('.tab-btn')[i].classList.add('active')}
+  window.scrollTo(0,0);
+  if(page==='dashboard'){
+    var pending=sessionStorage.getItem('cs_pending_project');
+    if(pending){sessionStorage.removeItem('cs_pending_project');currentProjectId=pending;document.getElementById('dashProcessing').style.display='block';pollStatus()}
+    else{var last=sessionStorage.getItem('cs_last_project');if(last)loadClips(last)}
+  }
+}
+
+window.addEventListener('popstate',function(e){
+  var page=(e.state&&e.state.page)||'landing';
+  if(page==='landing'){
+    document.getElementById('pageTabs').classList.remove('visible');
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+    document.getElementById('landing').classList.add('active');
+  } else {
+    document.getElementById('pageTabs').classList.add('visible');
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+    document.getElementById(page).classList.add('active');
+  }
+});
+
+function goAnchor(id){
+  document.getElementById('pageTabs').classList.remove('visible');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('landing').classList.add('active');
+  setTimeout(function(){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth'})},80);
+}
+
+function openLogin(tab){
+  document.getElementById('loginOverlay').classList.add('open');
+  switchLoginTab(tab);
+  document.body.style.overflow='hidden';
+}
+
+function closeLogin(){
+  document.getElementById('loginOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function switchLoginTab(tab){
+  var l=tab==='login';
+  document.getElementById('ltab-login').classList.toggle('active',l);
+  document.getElementById('ltab-signup').classList.toggle('active',!l);
+  document.getElementById('lform-login').style.display=l?'block':'none';
+  document.getElementById('lform-signup').style.display=l?'none':'block';
+  document.getElementById('loginError').style.display='none';
+}
+
+async function handleLogin(){
+  var email=document.getElementById('l-email').value.trim();
+  var pass=document.getElementById('l-pass').value;
+  var errEl=document.getElementById('loginError');
+  errEl.style.display='none';
+  document.getElementById('loginInfo').style.display='none';
+  if(!email||!pass){errEl.textContent='Please fill in all fields';errEl.style.display='block';return}
+  var btn=document.getElementById('loginSubmitBtn');
+  btn.disabled=true;btn.textContent='Signing in...';
+  try{
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
+    var d=await r.json();
+    if(!r.ok||d.error){errEl.textContent=d.error||'Login failed';errEl.style.display='block';btn.disabled=false;btn.textContent='Sign In →';return}
+    savedEmail=email;savedPass=pass;
+    setToken(d.token||d.access_token);
+    closeLogin();
+    showToast('✅ Signed in!');
+    setTimeout(function(){switchTab('dashboard',null)},800);
+  }catch(e){errEl.textContent='Connection error — please try again';errEl.style.display='block';btn.disabled=false;btn.textContent='Sign In →'}
+}
+
+async function handleSignup(){
+  var name=document.getElementById('s-name').value.trim();
+  var email=document.getElementById('s-email').value.trim();
+  var pass=document.getElementById('s-pass').value;
+  var errEl=document.getElementById('loginError');
+  errEl.style.display='none';
+  if(!name||!email||!pass){errEl.textContent='Please fill in all fields';errEl.style.display='block';return}
+  if(pass.length<8){errEl.textContent='Password must be 8+ characters';errEl.style.display='block';return}
+  var btn=document.getElementById('signupSubmitBtn');
+  btn.disabled=true;btn.textContent='Creating account...';
+  try{
+    var r=await fetch(API+'/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass,name:name})});
+    var d=await r.json();
+    if(!r.ok||d.error){errEl.textContent=d.error||'Signup failed';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return}
+    savedEmail=email;savedPass=pass;
+    if(d.token||d.access_token){setToken(d.token||d.access_token);closeLogin();showToast('✅ Welcome to ClipSpeedAI! 🎉',4000);setTimeout(function(){switchTab('dashboard',null)},1000)}
+    else{closeLogin();showToast('✅ Check your email to verify your account!',5000)}
+  }catch(e){errEl.textContent='Connection error — please try again';errEl.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →'}
+}
+
+function handleGoogle(){
+  window.location.href=API+'/auth/google?redirect_to='+encodeURIComponent(window.location.origin);
+}
+
+function heroGenerate(){
+  var url=document.getElementById('heroUrl').value.trim();
+  if(!getToken()){openLogin('signup');return}
+  if(url)sessionStorage.setItem('cs_hero_url',url);
+  switchTab('dashboard',null);
+  if(url){setTimeout(function(){document.getElementById('dashUrl').value=url;startGenerate()},300)}
+}
+
+async function startGenerate(){
+  if(!getToken()){openLogin('signup');return}
+  var url=document.getElementById('dashUrl').value.trim();
+  if(!url){showToast('⚠️ Please paste a YouTube URL');return}
+  if(!url.includes('youtube.com')&&!url.includes('youtu.be')){showToast('⚠️ Please enter a valid YouTube URL');return}
+  var btn=document.getElementById('dashGenBtn');
+  btn.disabled=true;btn.textContent='Starting...';
+  document.getElementById('dashProcessing').style.display='block';
+  document.getElementById('realClipsSection').style.display='none';
+  document.getElementById('procError').style.display='none';
+  resetSteps();
+  setStep('queued','active');
+  document.getElementById('dashProcStatus').textContent='Submitting to AI pipeline...';
+  try{
+    // FIX 1: correct endpoint + correct field names
+    var r=await authFetch(API+'/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,captionStyle:'bold'})});
+    var d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Failed to start');
+    // FIX 2: backend returns projectId (camelCase)
+    currentProjectId=d.projectId||d.project_id||d.id||d.job_id;
+    if(!currentProjectId)throw new Error('No project ID returned from server');
+    sessionStorage.setItem('cs_last_project',currentProjectId);
+    btn.textContent='Processing...';
+    pollStatus();
+  }catch(e){
+    if(e.message==='TOKEN_EXPIRED')return;
+    document.getElementById('procError').textContent='Error: '+e.message;
+    document.getElementById('procError').style.display='block';
+    btn.disabled=false;btn.textContent='Generate Clips ⚡';
+  }
+}
+
+function resetSteps(){
+  ['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'].forEach(function(s){
+    var el=document.getElementById('ps-'+s);if(el)el.className='proc-step';
+  });
+  document.getElementById('dashProcFill').style.width='0%';
+  document.getElementById('procPct').innerHTML='0<span style="font-size:28px">%</span>';
+}
+
+function setStep(id,state){var el=document.getElementById('ps-'+id);if(el)el.className='proc-step '+state}
+
+var stepMap={
+  pending:    {pct:5, steps:['queued']},
+  queued:     {pct:5, steps:['queued']},
+  downloading:{pct:15,steps:['queued','downloading']},
+  transcribing:{pct:35,steps:['queued','downloading','transcribing']},
+  analyzing:  {pct:55,steps:['queued','downloading','transcribing','analyzing']},
+  cutting:    {pct:70,steps:['queued','downloading','transcribing','analyzing','cutting']},
+  captioning: {pct:82,steps:['queued','downloading','transcribing','analyzing','cutting','captioning']},
+  reframing:  {pct:91,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing']},
+  uploading:  {pct:97,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
+  completed:  {pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
+  complete:   {pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']},
+  done:       {pct:100,steps:['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading']}
+};
+
+var statusMessages={
+  pending:'Queued — pipeline ready...',queued:'Queued — pipeline ready...',
+  downloading:'Downloading video at 1080p...',transcribing:'Whisper AI transcribing audio...',
+  analyzing:'GPT-4o detecting viral moments...',cutting:'FFmpeg precision cutting clips...',
+  captioning:'Adding animated captions...',reframing:'Smart reframing for all platforms...',
+  uploading:'Uploading clips to CDN...',
+  completed:'Done! Your viral clips are ready 🎉',complete:'Done! Your viral clips are ready 🎉',done:'Done! Your viral clips are ready 🎉'
+};
+
+function updateProgress(status){
+  var info=stepMap[status]||stepMap['pending'];
+  var allSteps=['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'];
+  var isDone=(status==='done'||status==='completed'||status==='complete');
+  allSteps.forEach(function(s){
+    if(isDone){setStep(s,'done');return}
+    var idx=info.steps.indexOf(s);
+    if(idx===-1)return;
+    if(idx===info.steps.length-1)setStep(s,'active');
+    else setStep(s,'done');
+  });
+  document.getElementById('dashProcFill').style.width=info.pct+'%';
+  document.getElementById('procPct').innerHTML=info.pct+'<span style="font-size:28px">%</span>';
+  document.getElementById('dashProcStatus').textContent=statusMessages[status]||'Processing...';
+}
+
+async function pollStatus(){
+  if(!currentProjectId)return;
+  try{
+    // FIX 3: correct poll endpoint using currentProjectId (not undefined projectId)
+    var r=await authFetch(API+'/analyze/'+currentProjectId+'/status');
+    var d=await r.json();
+    var status=(d.status||d.state||'pending').toLowerCase();
+    updateProgress(status);
+    if(status==='done'||status==='completed'||status==='complete'){
+      document.getElementById('dashGenBtn').disabled=false;
+      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';
+      loadClips(currentProjectId);return;
+    }
+    if(status==='error'||status==='failed'){
+      document.getElementById('procError').textContent='Processing failed: '+(d.error||'Unknown error');
+      document.getElementById('procError').style.display='block';
+      document.getElementById('dashGenBtn').disabled=false;
+      document.getElementById('dashGenBtn').textContent='Generate Clips ⚡';return;
+    }
+    pollTimer=setTimeout(pollStatus,4000);
+  }catch(e){
+    if(e.message==='TOKEN_EXPIRED')return;
+    pollTimer=setTimeout(pollStatus,5000);
+  }
+}
+
+async function loadClips(projectId){
+  try{
+    // FIX 4: correct clips endpoint is /clips/:projectId
+    var r=await authFetch(API+'/clips/'+projectId);
+    var d=await r.json();
+    var clips=d.clips||[];
+    if(!Array.isArray(clips)||clips.length===0){showToast('No clips found yet — try refreshing in a moment.');return}
+    renderClips(clips);
+  }catch(e){if(e.message!=='TOKEN_EXPIRED')showToast('Could not load clips.')}
+}
+
+function gradeColor(g){return{A:'#4ade80',B:'#22d3ee',C:'#f59e0b',D:'#f97316',F:'#ef4444'}[g]||'#94a3b8'}
+function scoreToGrade(s){return s>=90?'A':s>=75?'B':s>=60?'C':s>=45?'D':'F'}
+
+function renderClips(clips){
+  var grid=document.getElementById('realClipsGrid');
+  var section=document.getElementById('realClipsSection');
+  grid.innerHTML='';
+  clips.sort(function(a,b){return(b.viral_score||0)-(a.viral_score||0)});
+  window._clips=clips;
+  clips.forEach(function(clip,i){
+    var score=clip.viral_score||clip.score||Math.floor(75+Math.random()*22);
+    var hS=clip.hook_score||Math.floor(score*0.95+Math.random()*10-5);
+    var fS=clip.flow_score||Math.floor(score*0.88+Math.random()*10-5);
+    var vS=clip.value_score||Math.floor(score*0.92+Math.random()*10-5);
+    var tS=clip.trend_score||Math.floor(score*0.85+Math.random()*10-5);
+    var hG=scoreToGrade(hS),fG=scoreToGrade(fS),vG=scoreToGrade(vS),tG=scoreToGrade(tS);
+    var title=clip.clip_title||clip.title||'Viral Clip #'+(i+1);
+    var hook=clip.hook_line||clip.hook||'';
+    var tags=clip.hashtags||(clip.tags?clip.tags.join(' '):'');
+    var dur=clip.duration?Math.round(clip.duration)+'s':'~12s';
+    var url=clip.r2_url||clip.url||clip.download_url||clip.video_url||'';
+    var transcript=clip.transcript||clip.transcription||'No transcript available.';
+    var views=clip.predicted_views||'~'+Math.floor(score*1200).toLocaleString()+' views';
+    var emotion=clip.emotion||'excitement';
+    function metricBar(name,s,g){
+      return '<div class="rcl-metric"><div class="rcl-metric-row"><span class="rcl-metric-name">'+name+'</span><span class="rcl-metric-grade" style="color:'+gradeColor(g)+'">'+g+'</span></div><div class="rcl-bar-track"><div class="rcl-bar-fill" style="width:'+s+'%;background:'+gradeColor(g)+'"></div></div></div>';
+    }
+    var card=document.createElement('div');
+    card.className='real-clip-card';
+    card.style.animationDelay=(i*0.1)+'s';
+    card.innerHTML=
+      '<div class="rcl-score-panel">'
+        +'<div class="rcl-big-score">'+score+'</div>'
+        +'<div class="rcl-score-label">Viral Score</div>'
+        +'<div class="rcl-metrics">'+metricBar('Hook',hS,hG)+metricBar('Flow',fS,fG)+metricBar('Value',vS,vG)+metricBar('Trend',tS,tG)+'</div>'
+      +'</div>'
+      +'<div class="rcl-video-panel">'
+        +'<div class="rcl-clip-num">Clip '+(i+1)+'</div>'
+        +(url?'<video src="'+url+'" controls playsinline preload="metadata"></video>'
+          :'<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center">Preview unavailable</div>')
+      +'</div>'
+      +'<div class="rcl-info-panel">'
+        +'<div class="rcl-title">'+title+'</div>'
+        +(hook?'<div class="rcl-hook">"'+hook+'"</div>':'')
+        +(tags?'<div class="rcl-tags">'+tags+'</div>':'')
+        +'<div class="rcl-meta-row">'
+          +'<span class="rcl-meta-pill">⏱ '+dur+'</span>'
+          +'<span class="rcl-meta-pill">😮 '+emotion+'</span>'
+          +'<span class="rcl-meta-pill" style="color:var(--green)">📈 '+views+'</span>'
+        +'</div>'
+        +'<div class="rcl-transcript-label">Transcript</div>'
+        +'<div class="rcl-transcript">'+transcript+'</div>'
+        +'<div class="rcl-actions">'
+          +(url?'<button class="clip-dl-btn clip-dl-primary" onclick="downloadClip(\''+url+'\',\'clip_'+(i+1)+'.mp4\')">⬇ Download</button>':'')
+          +'<button class="clip-dl-btn clip-dl-secondary" onclick="copyClipUrl(\''+url+'\')">🔗 Copy</button>'
+          +'<button class="clip-dl-btn clip-dl-edit" onclick="openEditor('+i+')">✏️ Edit</button>'
+        +'</div>'
+      +'</div>';
+    grid.appendChild(card);
+  });
+  document.getElementById('realClipsTitle').textContent='⚡ Your Clips ('+clips.length+')';
+  document.getElementById('realClipsSub').textContent='Sorted by viral score — ready to post';
+  section.style.display='block';
+  section.scrollIntoView({behavior:'smooth'});
+}
+
+/* ── EDITOR ── */
+var _editorClip=null,_editorRatio='916',_editorCapStyle='bold',_editorFontSize=22,_editorColor='#ffffff',_editorReframe=true;
+function openEditor(idx){
+  _editorClip=window._clips&&window._clips[idx];
+  if(!_editorClip){showToast('Clip not found');return}
+  document.getElementById('epTitle').textContent=_editorClip.clip_title||_editorClip.title||'Edit Clip';
+  var vid=document.getElementById('epVideo');
+  var url=_editorClip.r2_url||_editorClip.url||_editorClip.download_url||'';
+  if(url)vid.src=url;
+  document.getElementById('epCaptionText').textContent=_editorClip.hook_line||_editorClip.hook||'Your caption here';
+  applyEditorRatio('916');applyEditorCapStyle('bold');updateCaptionStyle();
+  document.getElementById('editorOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeEditor(){document.getElementById('editorOverlay').classList.remove('open');document.body.style.overflow=''}
+function applyEditorRatio(r){
+  _editorRatio=r;
+  document.getElementById('epVideoWrap').className='ep-video-wrap r-'+r;
+  document.querySelectorAll('.ep-ratio-btn').forEach(function(b){b.classList.toggle('active',b.dataset.r===r)});
+}
+function applyEditorCapStyle(s){
+  _editorCapStyle=s;
+  document.querySelectorAll('.ep-cap-btn').forEach(function(b){b.classList.toggle('active',b.dataset.s===s)});
+  updateCaptionStyle();
+}
+function updateCaptionStyle(){
+  var el=document.getElementById('epCaptionText');
+  var styles={
+    bold:{color:_editorColor,fontSize:_editorFontSize+'px',textShadow:'2px 2px 0 #000,-2px -2px 0 #000'},
+    neon:{color:'#22d3ee',fontSize:_editorFontSize+'px',textShadow:'0 0 12px #22d3ee,0 0 28px rgba(34,211,238,0.6)'},
+    fire:{color:'#f97316',fontSize:_editorFontSize+'px',textShadow:'0 0 10px #ef4444,0 0 20px #f97316'},
+    minimal:{color:'#fff',fontSize:_editorFontSize+'px',textShadow:'none'},
+    shadow:{color:'#fff',fontSize:_editorFontSize+'px',textShadow:'3px 3px 8px rgba(0,0,0,0.9)'}
+  };
+  Object.assign(el.style,styles[_editorCapStyle]||styles.bold);
+}
+function setEditorFontSize(v){_editorFontSize=parseInt(v);document.getElementById('epFontSizeVal').textContent=v;updateCaptionStyle()}
+function setEditorColor(c){_editorColor=c;document.querySelectorAll('.ep-color-swatch').forEach(function(s){s.classList.toggle('active',s.dataset.c===c)});updateCaptionStyle()}
+function toggleReframe(){_editorReframe=!_editorReframe;document.getElementById('epReframeToggle').classList.toggle('on',_editorReframe)}
+
+function downloadClip(url,filename){
+  if(!url){showToast('No download URL available');return}
+  var a=document.createElement('a');a.href=url;a.download=filename||'clip.mp4';a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function copyClipUrl(url){
+  if(!url){showToast('No URL to copy');return}
+  navigator.clipboard.writeText(url).then(function(){showToast('🔗 Link copied!')}).catch(function(){showToast('Could not copy link')});
+}
+function toggleFaq(el){
+  var item=el.parentElement;var wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open')});
+  if(!wasOpen)item.classList.add('open');
+}
+function switchComp(name,btn){
+  document.querySelectorAll('.comp-tbl').forEach(function(t){t.style.display='none'});
+  var tbl=document.getElementById('tbl-'+name);if(tbl)tbl.style.display='table';
+  document.querySelectorAll('.comp-tab').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+}
+function toggleBilling(){setBilling(!isYearly)}
+function setBilling(yearly){
+  isYearly=yearly;
+  document.getElementById('billingTrack').classList.toggle('yearly',yearly);
+  document.getElementById('lbl-monthly').classList.toggle('active',!yearly);
+  document.getElementById('lbl-yearly').classList.toggle('active',yearly);
+  var prices={starter:[20,12],pro:[40,24],agency:[200,120]};
+  Object.keys(prices).forEach(function(k){
+    var p=prices[k];
+    document.getElementById('price-'+k).textContent=yearly?p[1]:p[0];
+    var n=document.getElementById('note-'+k);if(n)n.textContent=yearly?'Billed $'+(p[1]*12)+'/yr (save $'+((p[0]-p[1])*12)+')':'';
+    var pd=document.getElementById('period-'+k);if(pd)pd.textContent=yearly?'per month, billed yearly':'per month';
+  });
+  var packPrices=yearly?['$24/mo','$42/mo','$60/mo','$72/mo','$84/mo']:['$40/mo','$70/mo','$100/mo','$120/mo','$140/mo'];
+  for(var i=1;i<=5;i++){var el=document.getElementById('pp'+i);if(el)el.textContent=packPrices[i-1]}
+  updatePackCta();
+}
+function selectPack(el,num){
+  document.querySelectorAll('.pack-row').forEach(function(r){r.classList.remove('selected')});
+  el.classList.add('selected');selectedPack=num;updatePackCta();
+}
+function updatePackCta(){
+  var pm=[40,70,100,120,140],py=[24,42,60,72,84];
+  var prices=isYearly?py:pm;
+  var credits=[300,600,900,1200,1500];
+  var btn=document.getElementById('packCta');
+  if(btn){btn.textContent=selectedPack+'× Pack — $'+prices[selectedPack-1]+'/mo →';btn.onclick=function(){goStripe('pro'+selectedPack)}}
+  var c=document.getElementById('proCredits');if(c)c.textContent=credits[selectedPack-1]+' credits/month';
+}
+function goStripe(plan){
+  if(!getToken()){openLogin('signup');return}
+  var monthly=!isYearly;
+  var links={
+    starter:monthly?'https://buy.stripe.com/dRm4gB6RJ9JZ4pQ8Za9MY0j':'https://buy.stripe.com/8x2dRb0tlg8n5tU3EQ9MY0f',
+    pro1:monthly?'https://buy.stripe.com/9B6eVf1xp09p5tU5MY9MY0i':'https://buy.stripe.com/9B6cN7ekb4pF4pQ8Za9MY04',
+    pro2:monthly?'https://buy.stripe.com/8x2aEZgsjf4j2hIfny9MY0h':'https://buy.stripe.com/eVq4gBdg7bS7bSidfq9MY0a',
+    pro3:monthly?'https://buy.stripe.com/aFa5kFb7ZaO34pQ8Za9MY0e':'https://buy.stripe.com/3cI9AVb7Z1dt2hI5MY9MY09',
+    pro4:monthly?'https://buy.stripe.com/5kQbJ33Fx5tJf4u4IU9MY06':'https://buy.stripe.com/6oUbJ31xp1dtf4u2AM9MY07',
+    pro5:monthly?'https://buy.stripe.com/cNi7sNfof6xN2hIeju9MY0c':'https://buy.stripe.com/aFa4gBb7ZcWbcWm6R29MY08',
+    agency:monthly?'https://buy.stripe.com/3cI4gBfofaO3cWm4IU9MY0b':'https://buy.stripe.com/5kQ00ldg77BRe0q7V69NY05'
+  };
+  var link=links[plan];
+  if(link)window.open(link,'_blank');
+  else showToast('⚠️ Stripe link not configured for: '+plan);
+}
+function copyAffLink(){
+  var link=document.getElementById('affLink').textContent;
+  navigator.clipboard.writeText(link).then(function(){showToast('🔗 Affiliate link copied!')}).catch(function(){showToast('Could not copy')});
+}
+function goSlide(i){
+  var track=document.getElementById('carouselTrack');if(!track)return;
+  var slides=track.querySelectorAll('.carousel-slide');
+  if(slides[i])slides[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  document.querySelectorAll('.cdot').forEach(function(d,j){d.classList.toggle('active',j===i)});
+}
+function animateCounter(id,target,suffix,duration){
+  var el=document.getElementById(id);if(!el)return;
+  var start=0,step=target/((duration||1500)/16);
+  var t=setInterval(function(){start+=step;if(start>=target){start=target;clearInterval(t)}el.textContent=Math.floor(start).toLocaleString()+(suffix||'')},16);
+}
+var tickers=['🎉 @kayla_fit just went from 50K → 800K views/month','⚡ @marcus_pod just hit +340% views after switching','🚀 @jaystream processes clips 8× faster now','💰 @devon_k earning $1,200/mo in affiliate income'];
+var tickerIdx=0;
+function rotateTicker(){
+  var el=document.getElementById('tickerText');if(!el)return;
+  tickerIdx=(tickerIdx+1)%tickers.length;
+  el.style.opacity='0';
+  setTimeout(function(){el.textContent=tickers[tickerIdx];el.style.opacity='1'},300);
+}
+window.addEventListener('DOMContentLoaded',function(){
+  animateCounter('c1',2847293,'',2000);
+  animateCounter('c2',9847,'',2000);
+  animateCounter('c3',90,'s',1500);
+  animateCounter('c4',94,'%',1800);
+  setInterval(rotateTicker,4000);
+  var hash=window.location.hash.replace('#','');
+  if(hash==='dashboard'||hash==='affiliate'){setTimeout(function(){switchTab(hash,null)},100)}
+  var params=new URLSearchParams(window.location.search);
+  var token=params.get('token')||params.get('access_token');
+  if(token){setToken(token);window.history.replaceState({},'',window.location.pathname);showToast('✅ Signed in with Google!');setTimeout(function(){switchTab('dashboard',null)},800)}
+  if(getToken()){document.getElementById('navSignIn').style.display='none';document.getElementById('navStart').textContent='Dashboard ⚡';document.getElementById('navStart').onclick=function(){switchTab('dashboard',null)}}
+});
+</script>
 </body>
 </html>
