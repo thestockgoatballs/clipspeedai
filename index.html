@@ -977,8 +977,16 @@ function switchTab(page,btn){
   window.scrollTo(0,0);
   if(page==='dashboard'){
     var pending=sessionStorage.getItem('cs_pending_project');
-    if(pending){sessionStorage.removeItem('cs_pending_project');currentProjectId=pending;document.getElementById('dashProcessing').style.display='block';pollStatus()}
-    else{var last=sessionStorage.getItem('cs_last_project');if(last)loadClips(last)}
+    if(pending){
+      sessionStorage.removeItem('cs_pending_project');
+      currentProjectId=pending;
+      document.getElementById('dashProcessing').style.display='block';
+      pollStatus();
+    } else {
+      // ── FIX: use in-memory currentProjectId first, then fall back to saved ──
+      var pid=currentProjectId||sessionStorage.getItem('cs_last_project');
+      if(pid)loadClips(pid);
+    }
   }
 }
 
@@ -1089,11 +1097,9 @@ async function startGenerate(){
   setStep('queued','active');
   document.getElementById('dashProcStatus').textContent='Submitting to AI pipeline...';
   try{
-    // FIX 1: correct endpoint + correct field names
     var r=await authFetch(API+'/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,captionStyle:'bold'})});
     var d=await r.json();
     if(!r.ok||d.error)throw new Error(d.error||'Failed to start');
-    // FIX 2: backend returns projectId (camelCase)
     currentProjectId=d.projectId||d.project_id||d.id||d.job_id;
     if(!currentProjectId)throw new Error('No project ID returned from server');
     sessionStorage.setItem('cs_last_project',currentProjectId);
@@ -1160,7 +1166,6 @@ function updateProgress(status){
 async function pollStatus(){
   if(!currentProjectId)return;
   try{
-    // FIX 3: correct poll endpoint using currentProjectId (not undefined projectId)
     var r=await authFetch(API+'/analyze/'+currentProjectId+'/status');
     var d=await r.json();
     var status=(d.status||d.state||'pending').toLowerCase();
@@ -1183,15 +1188,31 @@ async function pollStatus(){
   }
 }
 
+// ── FIXED loadClips: caches clips in sessionStorage so they never vanish ──
 async function loadClips(projectId){
+  if(!projectId)return;
+
+  // Paint from cache immediately so clips appear instantly on tab switch
+  var cached=sessionStorage.getItem('cs_clips_'+projectId);
+  if(cached){
+    try{renderClips(JSON.parse(cached))}catch(e){}
+  }
+
+  // Always re-fetch from server for fresh data
   try{
-    // FIX 4: correct clips endpoint is /clips/:projectId
     var r=await authFetch(API+'/clips/'+projectId);
     var d=await r.json();
     var clips=d.clips||[];
-    if(!Array.isArray(clips)||clips.length===0){showToast('No clips found yet — try refreshing in a moment.');return}
+    if(!Array.isArray(clips)||clips.length===0){
+      if(!cached)showToast('No clips found yet — try refreshing in a moment.');
+      return;
+    }
+    // Save to sessionStorage so clips survive tab switches
+    try{sessionStorage.setItem('cs_clips_'+projectId,JSON.stringify(clips))}catch(e){}
     renderClips(clips);
-  }catch(e){if(e.message!=='TOKEN_EXPIRED')showToast('Could not load clips.')}
+  }catch(e){
+    if(e.message!=='TOKEN_EXPIRED')showToast('Could not load clips.');
+  }
 }
 
 function gradeColor(g){return{A:'#4ade80',B:'#22d3ee',C:'#f59e0b',D:'#f97316',F:'#ef4444'}[g]||'#94a3b8'}
