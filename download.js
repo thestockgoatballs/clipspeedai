@@ -4,22 +4,39 @@ const fs = require('fs');
 
 const DOWNLOAD_DIR = '/tmp/clipspeed/downloads';
 
-// Auto-update yt-dlp once per process lifetime so Railway never runs stale version
+// ── Webshare rotating residential proxies ──────────────────────────────────
+const PROXY_HOST = 'p.webshare.io';
+const PROXY_PORT = '80';
+const PROXY_PASS = 'b39w6odjqtxy';
+// Rotate through all 9 proxies — picks a different one each download
+const PROXY_USERS = [
+  'hcxkyfzx-1','hcxkyfzx-2','hcxkyfzx-3','hcxkyfzx-4','hcxkyfzx-5',
+  'hcxkyfzx-6','hcxkyfzx-7','hcxkyfzx-8','hcxkyfzx-9',
+];
+let _proxyIdx = 0;
+function getProxy() {
+  const user = PROXY_USERS[_proxyIdx % PROXY_USERS.length];
+  _proxyIdx++;
+  return `http://${user}:${PROXY_PASS}@${PROXY_HOST}:${PROXY_PORT}`;
+}
+
+// ── Auto-update yt-dlp once per process boot ───────────────────────────────
 let _ytdlpUpdated = false;
 function ensureYtdlpFresh() {
   if (_ytdlpUpdated) return;
   try {
-    console.log('🔄 Updating yt-dlp to latest...');
+    console.log('🔄 Updating yt-dlp...');
     execSync('pip3 install --break-system-packages --upgrade yt-dlp', {
       timeout: 60000, stdio: 'pipe'
     });
-    console.log('✅ yt-dlp updated');
+    console.log('✅ yt-dlp up to date');
   } catch (e) {
-    console.warn('⚠️ yt-dlp update failed (continuing anyway):', e.message?.slice(0, 100));
+    console.warn('⚠️ yt-dlp update skipped:', e.message?.slice(0, 80));
   }
   _ytdlpUpdated = true;
 }
 
+// ── Main download function ─────────────────────────────────────────────────
 async function downloadVideo(videoUrl) {
   fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
 
@@ -29,17 +46,18 @@ async function downloadVideo(videoUrl) {
   const outputPath = path.join(DOWNLOAD_DIR, `${videoId}.mp4`);
   const metaPath   = path.join(DOWNLOAD_DIR, `${videoId}.info.json`);
 
-  // Cache hit
+  // Cache hit — skip download
   if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 100000) {
     console.log(`⚡ Cache hit: ${videoId}`);
   } else {
-    // Clean any partial file
     if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
-
-    // Always run with latest yt-dlp
     ensureYtdlpFresh();
 
+    const proxy = getProxy();
+    console.log(`🌐 Using proxy: ${proxy.split('@')[1]}`); // log host only, not credentials
+
     const baseFlags = [
+      `--proxy "${proxy}"`,
       '--merge-output-format mp4',
       '--write-info-json',
       '--no-playlist',
@@ -50,27 +68,24 @@ async function downloadVideo(videoUrl) {
       `--output "${outputPath}"`,
     ].join(' ');
 
-    // 4 methods, each trying a different client/format strategy
+    // 4 escalating methods — stops at first success
     const methods = [
-      // Method 1 — iOS client (most reliable, bypasses bot check)
       {
-        label: 'ios client',
+        label: 'ios client + proxy',
         cmd: `yt-dlp --extractor-args "youtube:player_client=ios" -f "best[height<=720][ext=mp4]/best[height<=720]/best" ${baseFlags} "${videoUrl}"`,
       },
-      // Method 2 — android client
       {
-        label: 'android client',
+        label: 'android client + proxy',
         cmd: `yt-dlp --extractor-args "youtube:player_client=android" -f "best[height<=720][ext=mp4]/best[height<=720]/best" ${baseFlags} "${videoUrl}"`,
       },
-      // Method 3 — mweb client with age-gate bypass
       {
-        label: 'mweb client',
+        label: 'mweb client + proxy',
         cmd: `yt-dlp --extractor-args "youtube:player_client=mweb" -f "best[height<=480][ext=mp4]/best[height<=480]/worst" ${baseFlags} "${videoUrl}"`,
       },
-      // Method 4 — tv_embedded client, lowest quality, last resort
       {
-        label: 'tv_embedded fallback',
-        cmd: `yt-dlp --extractor-args "youtube:player_client=tv_embedded" -f "worst[ext=mp4]/worst" --no-write-info-json --socket-timeout 60 --retries 10 --output "${outputPath}" "${videoUrl}"`,
+        // Last resort — fresh proxy, lowest quality, longer timeout
+        label: 'tv_embedded + fresh proxy',
+        cmd: `yt-dlp --extractor-args "youtube:player_client=tv_embedded" --proxy "${getProxy()}" -f "worst[ext=mp4]/worst" --no-write-info-json --socket-timeout 60 --retries 10 --output "${outputPath}" "${videoUrl}"`,
       },
     ];
 
@@ -91,7 +106,7 @@ async function downloadVideo(videoUrl) {
     }
 
     if (!succeeded) {
-      throw new Error('All download methods failed — YouTube may be blocking this IP. Try adding cookies.');
+      throw new Error('All download methods failed — check proxy credentials or try adding YouTube cookies.');
     }
   }
 
@@ -101,7 +116,7 @@ async function downloadVideo(videoUrl) {
     try { metadata = JSON.parse(fs.readFileSync(metaPath, 'utf-8')); } catch (e) {}
   }
 
-  // Get duration via ffprobe
+  // Duration via ffprobe
   let duration = 0;
   try {
     const probe = execSync(
