@@ -4,11 +4,10 @@ const fs = require('fs');
 
 const DOWNLOAD_DIR = '/tmp/clipspeed/downloads';
 
-// ── Webshare rotating residential proxies ──────────────────────────────────
+// ── Webshare rotating residential proxies ─────────────────────────────────
 const PROXY_HOST = 'p.webshare.io';
 const PROXY_PORT = '80';
 const PROXY_PASS = 'b39w6odjqtxy';
-// Rotate through all 9 proxies — picks a different one each download
 const PROXY_USERS = [
   'hcxkyfzx-1','hcxkyfzx-2','hcxkyfzx-3','hcxkyfzx-4','hcxkyfzx-5',
   'hcxkyfzx-6','hcxkyfzx-7','hcxkyfzx-8','hcxkyfzx-9',
@@ -20,7 +19,7 @@ function getProxy() {
   return `http://${user}:${PROXY_PASS}@${PROXY_HOST}:${PROXY_PORT}`;
 }
 
-// ── Auto-update yt-dlp once per process boot ───────────────────────────────
+// ── Auto-update yt-dlp once per process boot ──────────────────────────────
 let _ytdlpUpdated = false;
 function ensureYtdlpFresh() {
   if (_ytdlpUpdated) return;
@@ -46,7 +45,7 @@ async function downloadVideo(videoUrl) {
   const outputPath = path.join(DOWNLOAD_DIR, `${videoId}.mp4`);
   const metaPath   = path.join(DOWNLOAD_DIR, `${videoId}.info.json`);
 
-  // Cache hit — skip download
+  // Cache hit
   if (fs.existsSync(outputPath) && fs.statSync(outputPath).size > 100000) {
     console.log(`⚡ Cache hit: ${videoId}`);
   } else {
@@ -54,7 +53,7 @@ async function downloadVideo(videoUrl) {
     ensureYtdlpFresh();
 
     const proxy = getProxy();
-    console.log(`🌐 Using proxy: ${proxy.split('@')[1]}`); // log host only, not credentials
+    console.log(`🌐 Using proxy: ${proxy.split('@')[1]}`);
 
     const baseFlags = [
       `--proxy "${proxy}"`,
@@ -68,7 +67,6 @@ async function downloadVideo(videoUrl) {
       `--output "${outputPath}"`,
     ].join(' ');
 
-    // 4 escalating methods — stops at first success
     const methods = [
       {
         label: 'ios client + proxy',
@@ -83,7 +81,6 @@ async function downloadVideo(videoUrl) {
         cmd: `yt-dlp --extractor-args "youtube:player_client=mweb" -f "best[height<=480][ext=mp4]/best[height<=480]/worst" ${baseFlags} "${videoUrl}"`,
       },
       {
-        // Last resort — fresh proxy, lowest quality, longer timeout
         label: 'tv_embedded + fresh proxy',
         cmd: `yt-dlp --extractor-args "youtube:player_client=tv_embedded" --proxy "${getProxy()}" -f "worst[ext=mp4]/worst" --no-write-info-json --socket-timeout 60 --retries 10 --output "${outputPath}" "${videoUrl}"`,
       },
