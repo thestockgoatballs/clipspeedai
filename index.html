@@ -1163,23 +1163,18 @@ function updatePackCta(){
 
 function goStripe(plan){
   if(!getToken()){openLogin('signup');return}
-  // ⚠️ REPLACE THESE WITH YOUR REAL STRIPE PAYMENT LINKS
+  var monthly=!isYearly;
   var links={
-     Starter $20/mo — dRm4gB6RJ9JZ4pQ8Za9MY0j
-✅ Starter $12/mo yearly — 8x2dRb0tlg8n5tU3EQ9MY0f
-✅ Pro 1× $40/mo — 9B6eVf1xp09p5tU5MY9MY0i
-✅ Pro 1× $24/mo yearly — 9B6cN7ekb4pF4pQ8Za9MY04
-✅ Pro 2× $70/mo — 8x2aEZgsjf4j2hIfny9MY0h
-✅ Pro 2× $42/mo yearly — eVq4gBdg7bS7bSidfq9MY0a
-✅ Pro 3× $60/mo yearly — 3cI9AVb7Z1dt2hI5MY9MY09
-✅ Pro 4× $120/mo — 5kQbJ33Fx5tJf4u4IU9MY06
-✅ Pro 4× $72/mo yearly — 6oUbJ31xp1dtf4u2AM9MY07
-✅ Pro 5× $140/mo — cNi7sNfof6xN2hIeju9MY0c
-✅ Pro 5× $84/mo yearly — aFa4gBb7ZcWbcWm6R29MY08
-✅ Agency $200/mo — 3cI4gBfofaO3cWm4IU9MY0b
-✅ Agency $864/yr — 5kQ00ldg77BRe0q7V69NY05  };
+    starter:   monthly ? 'https://buy.stripe.com/dRm4gB6RJ9JZ4pQ8Za9MY0j' : 'https://buy.stripe.com/8x2dRb0tlg8n5tU3EQ9MY0f',
+    pro1:      monthly ? 'https://buy.stripe.com/9B6eVf1xp09p5tU5MY9MY0i' : 'https://buy.stripe.com/9B6cN7ekb4pF4pQ8Za9MY04',
+    pro2:      monthly ? 'https://buy.stripe.com/8x2aEZgsjf4j2hIfny9MY0h' : 'https://buy.stripe.com/eVq4gBdg7bS7bSidfq9MY0a',
+    pro3:      monthly ? 'https://buy.stripe.com/aFa5kFb7ZaO34pQ8Za9MY0e' : 'https://buy.stripe.com/3cI9AVb7Z1dt2hI5MY9MY09',
+    pro4:      monthly ? 'https://buy.stripe.com/5kQbJ33Fx5tJf4u4IU9MY06' : 'https://buy.stripe.com/6oUbJ31xp1dtf4u2AM9MY07',
+    pro5:      monthly ? 'https://buy.stripe.com/cNi7sNfof6xN2hIeju9MY0c' : 'https://buy.stripe.com/aFa4gBb7ZcWbcWm6R29MY08',
+    agency:    monthly ? 'https://buy.stripe.com/3cI4gBfofaO3cWm4IU9MY0b' : 'https://buy.stripe.com/5kQ00ldg77BRe0q7V69NY05'
+  };
   var link=links[plan];
-  if(link&&!link.includes('YOUR_'))window.open(link,'_blank');
+  if(link&&!link.includes('placeholder'))window.open(link,'_blank');
   else showToast('⚠️ Stripe link not configured for: '+plan);
 }
 
