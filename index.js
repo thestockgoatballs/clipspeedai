@@ -1,111 +1,94 @@
-// Replace everything from "var stepMap=" down to the end of "async function pollStatus()" with this:
+require('dotenv').config();
 
-var stepMap={
-  queued:      {pct:8},
-  downloading: {pct:20},
-  transcribing:{pct:38},
-  analyzing:   {pct:56},
-  cutting:     {pct:70},
-  captioning:  {pct:82},
-  reframing:   {pct:90},
-  uploading:   {pct:96},
-  done:        {pct:100}
-};
+const express    = require('express');
+const cors       = require('cors');
+const helmet     = require('helmet');
+const IORedis    = require('ioredis');
+const { Queue }  = require('bullmq');
 
-var statusMessages={
-  queued:'Queued — pipeline ready...',
-  downloading:'Downloading video at 1080p...',
-  transcribing:'Whisper AI transcribing audio...',
-  analyzing:'GPT-4o detecting viral moments...',
-  cutting:'FFmpeg precision cutting clips...',
-  captioning:'Adding animated captions...',
-  reframing:'Smart reframing for all platforms...',
-  uploading:'Uploading clips to CDN...',
-  done:'Done! Your viral clips are ready 🎉'
-};
+const { rateLimiter }            = require('./middleware/rateLimiter');
+const { verifyAuth, getProfile } = require('./lib/supabase');
 
-var _currentDisplayPct = 0;
-var _smoothTimer = null;
-var _targetPct = 0;
-
-function smoothTickTo(target) {
-  _targetPct = target;
-  if (_smoothTimer) return; // already ticking
-  _smoothTimer = setInterval(function() {
-    if (_currentDisplayPct < _targetPct) {
-      // Move faster when far away, slower when close
-      var gap = _targetPct - _currentDisplayPct;
-      var step = Math.max(0.3, Math.min(gap * 0.04, 1.5));
-      _currentDisplayPct = Math.min(_currentDisplayPct + step, _targetPct);
-      var pct = Math.floor(_currentDisplayPct);
-      document.getElementById('dashProcFill').style.width = pct + '%';
-      document.getElementById('procPct').innerHTML = pct + '<span style="font-size:28px">%</span>';
-    }
-    // Never go backward — just wait
-    if (_currentDisplayPct >= _targetPct) {
-      clearInterval(_smoothTimer);
-      _smoothTimer = null;
-    }
-  }, 80);
-}
-
-function updateProgress(status) {
-  var allSteps = ['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'];
-  var idx = allSteps.indexOf(status);
-
-  allSteps.forEach(function(s, i) {
-    if (status === 'done') {
-      setStep(s, 'done');
-    } else if (i < idx) {
-      setStep(s, 'done');
-    } else if (i === idx) {
-      setStep(s, 'active');
-    }
-    // else leave as-is (not started yet)
-  });
-
-  var info = stepMap[status] || stepMap['queued'];
-  smoothTickTo(info.pct);
-  document.getElementById('dashProcStatus').textContent = statusMessages[status] || 'Processing...';
-}
-
-function resetSteps() {
-  ['queued','downloading','transcribing','analyzing','cutting','captioning','reframing','uploading'].forEach(function(s) {
-    var el = document.getElementById('ps-' + s); if (el) el.className = 'proc-step';
-  });
-  _currentDisplayPct = 0;
-  _targetPct = 0;
-  if (_smoothTimer) { clearInterval(_smoothTimer); _smoothTimer = null; }
-  document.getElementById('dashProcFill').style.width = '0%';
-  document.getElementById('procPct').innerHTML = '0<span style="font-size:28px">%</span>';
-}
-
-async function pollStatus() {
-  if (!currentProjectId) return;
+// ── Auth middleware ───────────────────────────────────────────
+async function authMiddleware(req, res, next) {
   try {
-    var r = await authFetch(API + '/analyze/' + currentProjectId + '/status');
-    var d = await r.json();
-    var status = (d.status || d.state || 'queued').toLowerCase();
-    updateProgress(status);
-    if (status === 'done' || status === 'completed' || status === 'complete') {
-      smoothTickTo(100);
-      setTimeout(function() {
-        document.getElementById('dashGenBtn').disabled = false;
-        document.getElementById('dashGenBtn').textContent = 'Generate Clips ⚡';
-        loadClips(currentProjectId);
-      }, 800);
-      return;
-    }
-    if (status === 'error' || status === 'failed') {
-      document.getElementById('procError').textContent = 'Processing failed: ' + (d.error || 'Unknown error');
-      document.getElementById('procError').style.display = 'block';
-      document.getElementById('dashGenBtn').disabled = false;
-      document.getElementById('dashGenBtn').textContent = 'Generate Clips ⚡';
-      return;
-    }
-    pollTimer = setTimeout(pollStatus, 3000);
-  } catch(e) {
-    if (e.message === 'TOKEN_EXPIRED') return;
-    pollTimer = setTimeout(pollStatus, 5000);
+    const header = req.headers.authorization || '';
+    const token  = header.replace('Bearer ', '').trim();
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+
+    const user = await verifyAuth(token);
+    if (!user)  return res.status(401).json({ error: 'Invalid or expired token' });
+
+    // Attach profile (plan needed by rateLimiter)
+    const profile  = await getProfile(user.id);
+    req.user       = { ...user, plan: profile?.plan || 'free' };
+    next();
+  } catch (err) {
+    console.error('Auth error:', err.message);
+    res.status(401).json({ error: 'Authentication failed' });
   }
 }
+
+const app  = express();
+const PORT = process.env.PORT || 3000;
+
+// ── Redis + BullMQ queue ──────────────────────────────────────
+const redis = new IORedis(process.env.REDIS_URL, {
+  maxRetriesPerRequest: null,
+  enableReadyCheck:     false,
+});
+
+const videoQueue = new Queue('video-processing', { connection: redis });
+app.set('videoQueue', videoQueue);
+
+// ── Core middleware ───────────────────────────────────────────
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(cors({
+  origin:      process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  credentials: true,
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// ── Health check (no auth) ────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/', (req, res) => {
+  res.json({ name: 'ClipSpeedAI API', status: 'running' });
+});
+
+// ── Public routes (no auth) ───────────────────────────────────
+try { app.use('/auth',    require('./routes/auth'));    } catch (e) { console.warn('⚠️  auth route failed:',    e.message); }
+try { app.use('/webhook', require('./routes/webhook')); } catch (e) { console.warn('⚠️  webhook route failed:', e.message); }
+
+// ── Protected routes (auth + rate limiter) ────────────────────
+try { app.use('/analyze',   authMiddleware, rateLimiter('analyze'),   require('./routes/analyze'));   } catch (e) { console.warn('⚠️  analyze route failed:',   e.message); }
+try { app.use('/clips',     authMiddleware,                           require('./routes/clips'));     } catch (e) { console.warn('⚠️  clips route failed:',     e.message); }
+try { app.use('/export',    authMiddleware, rateLimiter('export'),    require('./routes/export'));    } catch (e) { console.warn('⚠️  export route failed:',    e.message); }
+try { app.use('/claude',    authMiddleware, rateLimiter('claude'),    require('./routes/claude'));    } catch (e) { console.warn('⚠️  claude route failed:',    e.message); }
+try { app.use('/billing',   authMiddleware,                           require('./routes/billing'));   } catch (e) { console.warn('⚠️  billing route failed:',   e.message); }
+try { app.use('/analytics', authMiddleware,                           require('./routes/analytics')); } catch (e) { console.warn('⚠️  analytics route failed:', e.message); }
+try { app.use('/templates', authMiddleware,                           require('./routes/templates')); } catch (e) { console.warn('⚠️  templates route failed:', e.message); }
+try { app.use('/broll',     authMiddleware,                           require('./routes/broll'));     } catch (e) { console.warn('⚠️  broll route failed:',     e.message); }
+
+// ── 404 handler ───────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
+});
+
+// ── Global error handler ──────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ── Start server ──────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`\n🚀 ClipSpeedAI API running on port ${PORT}`);
+  console.log(`📋 Queue: video-processing connected`);
+  console.log(`🛡️  Rate limiter: active on /analyze, /export, /claude\n`);
+});
+
+module.exports = app;
