@@ -1,4 +1,4 @@
-# force rebuild v54
+# force rebuild v55
 FROM node:20-slim
 
 RUN apt-get update && apt-get install -y \
@@ -15,17 +15,15 @@ RUN ln -sf $(which node) /usr/bin/nodejs || true && \
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir yt-dlp
 
-RUN echo "=== yt-dlp version ===" && yt-dlp --version && \
-    echo "=== node ===" && node --version
-
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --production
 
-# Force fresh source copy every build
-ARG CACHEBUST=1
 COPY . .
+
+# DEBUG: list everything copied into /app
+RUN echo "=== FILES IN /app ===" && ls -la /app
 
 RUN mkdir -p /tmp/clipspeed/downloads /tmp/clipspeed/clips /tmp/clipspeed/captions
 
