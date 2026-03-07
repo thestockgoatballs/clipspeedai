@@ -40,6 +40,9 @@ const redis = new IORedis(process.env.REDIS_URL, {
 const videoQueue = new Queue('video-processing', { connection: redis });
 app.set('videoQueue', videoQueue);
 
+// ── IMPORTANT: Raw body for Stripe webhook BEFORE express.json ──
+app.use('/webhook', express.raw({ type: 'application/json' }));
+
 // ── Core middleware ───────────────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({
