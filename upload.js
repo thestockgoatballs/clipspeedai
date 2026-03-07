@@ -2,12 +2,11 @@ const { uploadClip, uploadThumbnail } = require('../lib/r2');
 const fs = require('fs');
 
 /**
- * Uploads all processed clips and thumbnails to R2 storage
- * Returns array of public URLs for each clip
+ * Uploads all processed clips and thumbnails to R2 storage.
+ * Returns array of { clipId, videoUrl, thumbnailUrl } for each clip.
  */
 async function uploadClips(cutResults, projectId) {
-  console.log(`☁️ Uploading ${cutResults.length} clips to R2 storage...`);
-
+  console.log(`☁️  Uploading ${cutResults.length} clips to R2...`);
   const uploaded = [];
 
   for (const result of cutResults) {
@@ -17,20 +16,21 @@ async function uploadClips(cutResults, projectId) {
     }
 
     try {
-      // Prefer: watermarked > captioned > original
-      const watermarkedPath = result.watermarkedPath;
-      const captionedPath = result.captionedPath || result.clipPath.replace('.mp4', '_captioned.mp4');
+      // Prefer: watermarked > captioned/enhanced > original
       let uploadPath = result.clipPath;
-      if (watermarkedPath && fs.existsSync(watermarkedPath)) uploadPath = watermarkedPath;
-      else if (fs.existsSync(captionedPath)) uploadPath = captionedPath;
+      if (result.watermarkedPath && fs.existsSync(result.watermarkedPath)) {
+        uploadPath = result.watermarkedPath;
+      } else if (result.captionedPath && fs.existsSync(result.captionedPath)) {
+        uploadPath = result.captionedPath;
+      }
 
-      // Upload video clip
+      // Upload video
       const videoUrl = await uploadClip(uploadPath, projectId, result.clipId);
 
-      // Upload thumbnail if it exists
+      // Upload thumbnail — worker sets result.thumbnailPath
       let thumbnailUrl = null;
-      if (result.thumbPath && fs.existsSync(result.thumbPath)) {
-        thumbnailUrl = await uploadThumbnail(result.thumbPath, projectId, result.clipId);
+      if (result.thumbnailPath && fs.existsSync(result.thumbnailPath)) {
+        thumbnailUrl = await uploadThumbnail(result.thumbnailPath, projectId, result.clipId);
       }
 
       uploaded.push({
@@ -40,8 +40,7 @@ async function uploadClips(cutResults, projectId) {
         fileSize: fs.statSync(uploadPath).size,
       });
 
-      console.log(`  ✓ Clip ${result.clipId} uploaded: ${videoUrl}`);
-
+      console.log(`  ✓ Clip ${result.clipId} uploaded${thumbnailUrl ? ' + thumbnail' : ''}`);
     } catch (err) {
       console.error(`  ✗ Upload failed for clip ${result.clipId}: ${err.message}`);
       uploaded.push({ clipId: result.clipId, videoUrl: null, thumbnailUrl: null });
@@ -50,7 +49,6 @@ async function uploadClips(cutResults, projectId) {
 
   const successCount = uploaded.filter(u => u.videoUrl).length;
   console.log(`✅ Uploaded ${successCount}/${cutResults.length} clips to R2`);
-
   return uploaded;
 }
 
