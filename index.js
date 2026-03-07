@@ -19,7 +19,6 @@ async function authMiddleware(req, res, next) {
     const user = await verifyAuth(token);
     if (!user)  return res.status(401).json({ error: 'Invalid or expired token' });
 
-    // Attach profile (plan needed by rateLimiter)
     const profile  = await getProfile(user.id);
     req.user       = { ...user, plan: profile?.plan || 'free' };
     next();
@@ -64,14 +63,15 @@ try { app.use('/auth',    require('./routes/auth'));    } catch (e) { console.wa
 try { app.use('/webhook', require('./routes/webhook')); } catch (e) { console.warn('⚠️  webhook route failed:', e.message); }
 
 // ── Protected routes (auth + rate limiter) ────────────────────
-try { app.use('/analyze',   authMiddleware, rateLimiter('analyze'),   require('./routes/analyze'));   } catch (e) { console.warn('⚠️  analyze route failed:',   e.message); }
-try { app.use('/clips',     authMiddleware,                           require('./routes/clips'));     } catch (e) { console.warn('⚠️  clips route failed:',     e.message); }
-try { app.use('/export',    authMiddleware, rateLimiter('export'),    require('./routes/export'));    } catch (e) { console.warn('⚠️  export route failed:',    e.message); }
-try { app.use('/claude',    authMiddleware, rateLimiter('claude'),    require('./routes/claude'));    } catch (e) { console.warn('⚠️  claude route failed:',    e.message); }
-try { app.use('/billing',   authMiddleware,                           require('./routes/billing'));   } catch (e) { console.warn('⚠️  billing route failed:',   e.message); }
-try { app.use('/analytics', authMiddleware,                           require('./routes/analytics')); } catch (e) { console.warn('⚠️  analytics route failed:', e.message); }
-try { app.use('/templates', authMiddleware,                           require('./routes/templates')); } catch (e) { console.warn('⚠️  templates route failed:', e.message); }
-try { app.use('/broll',     authMiddleware,                           require('./routes/broll'));     } catch (e) { console.warn('⚠️  broll route failed:',     e.message); }
+try { app.use('/analyze',  authMiddleware, rateLimiter('analyze'),  require('./routes/analyze'));   } catch (e) { console.warn('⚠️  analyze route failed:',   e.message); }
+try { app.use('/clips',    authMiddleware,                          require('./routes/clips'));     } catch (e) { console.warn('⚠️  clips route failed:',     e.message); }
+try { app.use('/export',   authMiddleware, rateLimiter('export'),   require('./routes/export'));    } catch (e) { console.warn('⚠️  export route failed:',    e.message); }
+try { app.use('/claude',   authMiddleware, rateLimiter('claude'),   require('./routes/claude'));    } catch (e) { console.warn('⚠️  claude route failed:',    e.message); }
+try { app.use('/billing',  authMiddleware,                          require('./routes/billing'));   } catch (e) { console.warn('⚠️  billing route failed:',   e.message); }
+try { app.use('/analytics',authMiddleware,                          require('./routes/analytics')); } catch (e) { console.warn('⚠️  analytics route failed:', e.message); }
+try { app.use('/templates',authMiddleware,                          require('./routes/templates')); } catch (e) { console.warn('⚠️  templates route failed:', e.message); }
+try { app.use('/broll',    authMiddleware,                          require('./routes/broll'));     } catch (e) { console.warn('⚠️  broll route failed:',     e.message); }
+try { app.use('/referral', authMiddleware,                          require('./routes/referral')); } catch (e) { console.warn('⚠️  referral route failed:',  e.message); }
 
 // ── 404 handler ───────────────────────────────────────────────
 app.use((req, res) => {
