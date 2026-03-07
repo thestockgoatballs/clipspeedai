@@ -1,4 +1,4 @@
-# force rebuild v2
+# force rebuild v52
 FROM node:20-slim
 
 # Install system dependencies
