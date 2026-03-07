@@ -1,12 +1,13 @@
 const { Worker } = require('bullmq');
-const IORedis = require('ioredis');
-const { supabase } = require('./supabase');
+const IORedis    = require('ioredis');
+const { supabase }                  = require('./supabase');
 const { downloadVideo, cleanupVideo } = require('./download');
-const { transcribeVideo } = require('./transcribe');
-const { analyzeTranscript } = require('./analyze');
-const { cutClips } = require('./cut');
+const { transcribeVideo }           = require('./transcribe');
+const { analyzeTranscript }         = require('./analyze');
+const { cutClips }                  = require('./cut');
 const { addCaptions, addWatermark } = require('./captions');
-const { uploadClips } = require('./upload');
+const { enhanceAudio }              = require('./audioEnhance');
+const { uploadClips }               = require('./upload');
 
 const redis = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 
@@ -19,7 +20,7 @@ async function updateProjectStatus(projectId, status, extra = {}) {
 
 const worker = new Worker('video-processing', async (job) => {
   const { projectId, videoUrl, userId, captionStyle } = job.data;
-  
+
   console.log(`\n${'═'.repeat(60)}`);
   console.log(`⚡ PROCESSING JOB: ${projectId}`);
   console.log(`📎 URL: ${videoUrl}`);
@@ -28,57 +29,44 @@ const worker = new Worker('video-processing', async (job) => {
   let videoMeta = null;
 
   try {
-    // STEP 1: Download the video
+    // STEP 1: Download
     await updateProjectStatus(projectId, 'downloading');
     job.updateProgress(10);
-
     videoMeta = await downloadVideo(videoUrl);
-    
     await supabase.from('projects').update({
-      video_id: videoMeta.videoId,
-      video_title: videoMeta.title,
+      video_id:       videoMeta.videoId,
+      video_title:    videoMeta.title,
       video_duration: videoMeta.durationFormatted,
-      creator_name: videoMeta.uploader,
+      creator_name:   videoMeta.uploader,
     }).eq('id', projectId);
-
     console.log(`📥 Downloaded: ${videoMeta.title} (${videoMeta.durationFormatted})`);
 
-    // STEP 2: Transcribe audio
+    // STEP 2: Transcribe
     await updateProjectStatus(projectId, 'transcribing');
     job.updateProgress(25);
-
     const transcript = await transcribeVideo(videoMeta.videoPath);
-    
-    await supabase.from('projects').update({
-      transcript: transcript.fullText,
-    }).eq('id', projectId);
+    await supabase.from('projects').update({ transcript: transcript.fullText }).eq('id', projectId);
+    console.log(`🎤 Transcribed: ${transcript.segments.length} segments`);
 
-    console.log(`🎤 Transcribed: ${transcript.segments.length} segments, ${transcript.fullText.length} chars`);
-
-    // STEP 3: AI Analysis (find viral moments)
+    // STEP 3: AI Analysis
     await updateProjectStatus(projectId, 'analyzing');
     job.updateProgress(45);
-
     const analysis = await analyzeTranscript(transcript, videoMeta);
-
     await supabase.from('projects').update({
       total_clips_found: analysis.totalClipsFound || analysis.clips.length,
-      avg_viral_score: analysis.avgViralScore || 0,
-      creator_detected: !!analysis.creator?.name,
-      creator_name: analysis.creator?.name || videoMeta.uploader,
+      avg_viral_score:   analysis.avgViralScore || 0,
+      creator_detected:  !!analysis.creator?.name,
+      creator_name:      analysis.creator?.name || videoMeta.uploader,
     }).eq('id', projectId);
-
     console.log(`🧠 Analysis: ${analysis.clips.length} viral moments found`);
 
-    // STEP 4: Cut clips with FFmpeg
+    // STEP 4: Cut clips
     await updateProjectStatus(projectId, 'cutting');
     job.updateProgress(60);
-
     const cutResults = await cutClips(videoMeta.videoPath, analysis.clips, projectId);
+    console.log(`✂️  Cut: ${cutResults.filter(r => r.success).length} clips`);
 
-    console.log(`✂️ Cut: ${cutResults.filter(r => r.success).length} clips`);
-
-    // STEP 5: Add captions to clips
+    // STEP 5: Captions + Audio Enhancement (per clip)
     await updateProjectStatus(projectId, 'captioning');
     job.updateProgress(75);
 
@@ -88,140 +76,123 @@ const worker = new Worker('video-processing', async (job) => {
       const clip = analysis.clips.find(c => c.id === result.clipId);
       if (!clip) continue;
 
+      // 5a — Build word list for this clip
       const clipWords = [];
       for (const seg of transcript.segments) {
-        if (seg.words) {
-          for (const w of seg.words) {
-            if (w.start >= clip.startSeconds && w.end <= clip.endSeconds) {
-              clipWords.push({
-                word: w.word,
-                start: w.start - clip.startSeconds,
-                end: w.end - clip.startSeconds,
-              });
-            }
+        if (!seg.words) continue;
+        for (const w of seg.words) {
+          if (w.start >= clip.startSeconds && w.end <= clip.endSeconds) {
+            clipWords.push({
+              word:  w.word,
+              start: w.start - clip.startSeconds,
+              end:   w.end   - clip.startSeconds,
+            });
           }
         }
       }
 
+      // 5b — Add captions
       if (clipWords.length > 0) {
-        const captionedPath = await addCaptions(
+        result.captionedPath = await addCaptions(
           result.clipPath, clipWords, captionStyle || 'bold', clip.id, projectId
         );
-        result.captionedPath = captionedPath;
+      }
+
+      // 5c — Enhance audio (studio quality: EQ + compression + loudnorm)
+      try {
+        const inputForEnhance = result.captionedPath || result.clipPath;
+        const enhanced = await enhanceAudio(inputForEnhance, result.clipId, projectId);
+        result.captionedPath = enhanced; // enhanced version flows into upload
+        console.log(`🔊 Enhanced audio: clip ${result.clipId}`);
+      } catch (enhErr) {
+        // Non-fatal — if enhancement fails, continue with un-enhanced clip
+        console.warn(`⚠️  Audio enhance failed for clip ${result.clipId}: ${enhErr.message}`);
       }
     }
 
-    // STEP 5.5: Add watermark for free tier users
+    // STEP 5.5: Watermark for free tier
     const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', userId)
-      .single();
-    
+      .from('profiles').select('plan').eq('id', userId).single();
     const isFreePlan = !userProfile || userProfile.plan === 'free';
-    
+
     if (isFreePlan) {
-      console.log('💧 Free tier — adding watermark to all clips...');
+      console.log('💧 Free tier — adding watermark...');
       for (const result of cutResults) {
         if (!result.success) continue;
-        const pathToWatermark = result.captionedPath || result.clipPath;
-        const watermarked = await addWatermark(pathToWatermark, result.clipId, projectId);
-        result.watermarkedPath = watermarked;
+        const pathToMark = result.captionedPath || result.clipPath;
+        result.watermarkedPath = await addWatermark(pathToMark, result.clipId, projectId);
+        result.captionedPath   = result.watermarkedPath;
       }
     }
 
-    // STEP 6: Upload to R2 storage
+    // STEP 6: Upload to R2
     await updateProjectStatus(projectId, 'uploading');
     job.updateProgress(88);
-
     const uploadResults = await uploadClips(cutResults, projectId);
 
-    // STEP 7: Save clips to database
-    const clipRecords = analysis.clips.map((clip, i) => {
+    // STEP 7: Save to DB
+    const clipRecords = analysis.clips.map((clip) => {
       const upload = uploadResults.find(u => u.clipId === clip.id);
+      const cut    = cutResults.find(r => r.clipId === clip.id);
       return {
-        project_id: projectId,
-        user_id: userId,
-        clip_number: clip.id,
-        start_time: clip.startTime,
-        end_time: clip.endTime,
-        duration: clip.duration,
-        duration_seconds: clip.durationSeconds,
-        viral_score: clip.viralScore,
-        engagement_score: clip.engagementScore || 0,
-        retention_score: clip.retentionScore || 0,
-        shareability_score: clip.shareabilityScore || 0,
-        ai_header: clip.aiHeader,
-        hook_line: clip.hookLine,
-        clip_title: clip.clipTitle,
-        seo_title: clip.seoTitle,
-        description: clip.description,
-        platform: clip.platform,
-        predicted_views: clip.predictedViews,
-        hashtags: clip.hashtags,
-        caption_style: captionStyle || 'Bold Word-by-Word',
-        why_viral: clip.whyViral,
-        emotion: clip.emotion,
-        category: clip.category,
-        transcript_segment: clip.transcriptSegment || '',
-        video_url: upload?.videoUrl || null,
-        thumbnail_url: upload?.thumbnailUrl || null,
-        has_captions: !!cutResults.find(r => r.clipId === clip.id)?.captionedPath,
+        project_id:          projectId,
+        user_id:             userId,
+        clip_number:         clip.id,
+        start_time:          clip.startTime,
+        end_time:            clip.endTime,
+        duration:            clip.duration,
+        duration_seconds:    clip.durationSeconds,
+        viral_score:         clip.viralScore,
+        engagement_score:    clip.engagementScore    || 0,
+        retention_score:     clip.retentionScore     || 0,
+        shareability_score:  clip.shareabilityScore  || 0,
+        ai_header:           clip.aiHeader,
+        hook_line:           clip.hookLine,
+        clip_title:          clip.clipTitle,
+        seo_title:           clip.seoTitle,
+        description:         clip.description,
+        platform:            clip.platform,
+        predicted_views:     clip.predictedViews,
+        hashtags:            clip.hashtags,
+        caption_style:       captionStyle || 'Bold Word-by-Word',
+        why_viral:           clip.whyViral,
+        emotion:             clip.emotion,
+        category:            clip.category,
+        transcript_segment:  clip.transcriptSegment || '',
+        video_url:           upload?.videoUrl        || null,
+        thumbnail_url:       upload?.thumbnailUrl    || null,
+        has_captions:        !!cut?.captionedPath,
+        audio_enhanced:      true,
       };
     });
 
     await supabase.from('clips').insert(clipRecords);
 
-    // DONE!
+    // DONE
     await updateProjectStatus(projectId, 'complete');
     job.updateProgress(100);
-
-    // Clean up temp files
     cleanupVideo(videoMeta.videoId);
 
     console.log(`\n✅ PROJECT COMPLETE: ${projectId}`);
-    console.log(`   ${clipRecords.length} clips processed and uploaded`);
-    console.log(`   ${uploadResults.filter(u => u.videoUrl).length} downloadable .mp4 files\n`);
+    console.log(`   ${clipRecords.length} clips · ${uploadResults.filter(u => u.videoUrl).length} downloadable\n`);
 
-    return { 
-      success: true, 
-      clipsProcessed: clipRecords.length,
-      projectId 
-    };
+    return { success: true, clipsProcessed: clipRecords.length, projectId };
 
   } catch (err) {
-    console.error(`\n❌ JOB FAILED: ${projectId}`);
-    console.error(err);
-
+    console.error(`\n❌ JOB FAILED: ${projectId}`, err);
     await updateProjectStatus(projectId, 'failed', { error_message: err.message });
-
-    // Clean up on failure
     if (videoMeta?.videoId) cleanupVideo(videoMeta.videoId);
-
     throw err;
   }
 
 }, {
   connection: redis,
   concurrency: 2,
-  limiter: {
-    max: 10,
-    duration: 60000,
-  },
+  limiter: { max: 10, duration: 60000 },
 });
 
-worker.on('completed', (job) => {
-  console.log(`✅ Job ${job.id} completed`);
-});
-
-worker.on('failed', (job, err) => {
-  console.error(`❌ Job ${job?.id} failed:`, err.message);
-});
-
-worker.on('progress', (job, progress) => {
-  // Could emit to WebSocket for real-time progress
-});
+worker.on('completed', job  => console.log(`✅ Job ${job.id} completed`));
+worker.on('failed',    (job, err) => console.error(`❌ Job ${job?.id} failed:`, err.message));
 
 console.log('🔄 Video processing worker started');
-
 module.exports = worker;
