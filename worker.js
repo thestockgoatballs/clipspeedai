@@ -7,6 +7,7 @@ const { analyzeTranscript }         = require('./analyze');
 const { cutClips }                  = require('./cut');
 const { addCaptions, addWatermark } = require('./captions');
 const { enhanceAudio }              = require('./audioEnhance');
+const { generateThumbnail }         = require('./thumbnailGen');
 const { uploadClips }               = require('./upload');
 
 const redis = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
@@ -102,11 +103,20 @@ const worker = new Worker('video-processing', async (job) => {
       try {
         const inputForEnhance = result.captionedPath || result.clipPath;
         const enhanced = await enhanceAudio(inputForEnhance, result.clipId, projectId);
-        result.captionedPath = enhanced; // enhanced version flows into upload
+        result.captionedPath = enhanced;
         console.log(`🔊 Enhanced audio: clip ${result.clipId}`);
       } catch (enhErr) {
-        // Non-fatal — if enhancement fails, continue with un-enhanced clip
         console.warn(`⚠️  Audio enhance failed for clip ${result.clipId}: ${enhErr.message}`);
+      }
+
+      // 5d — Generate thumbnail from highest-motion frame
+      try {
+        result.thumbnailPath = await generateThumbnail(
+          result.captionedPath || result.clipPath, result.clipId, projectId
+        );
+        console.log(`🖼️  Thumbnail ready: clip ${result.clipId}`);
+      } catch (thumbErr) {
+        console.warn(`⚠️  Thumbnail failed for clip ${result.clipId}: ${thumbErr.message}`);
       }
     }
 
