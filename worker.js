@@ -1,15 +1,15 @@
 const { Worker } = require('bullmq');
 const IORedis    = require('ioredis');
-const { supabase }                           = require('./supabase');
-const { downloadVideo, cleanupVideo }        = require('./download');
-const { transcribeVideo }                    = require('./transcribe');
-const { analyzeTranscript }                  = require('./analyze');
-const { cutClips }                           = require('./cut');
+const { supabase }                            = require('./lib/supabase');
+const { downloadVideo, cleanupVideo }         = require('./download');
+const { transcribeVideo }                     = require('./transcribe');
+const { analyzeTranscript }                   = require('./analyze');
+const { cutClips }                            = require('./cut');
 const { addCaptionsBatch, addWatermarkBatch } = require('./captions');
-const { enhanceAudio }                       = require('./audioEnhance');
-const { generateThumbnail }                  = require('./thumbnailGen');
-const { uploadClips }                        = require('./upload');
-const { DURATION_CAPS }                      = require('../routes/referral');
+const { enhanceAudio }                        = require('./audioEnhance');
+const { generateThumbnail }                   = require('./thumbnailGen');
+const { uploadClips }                         = require('./upload');
+const { DURATION_CAPS }                       = require('../routes/referral');
 
 const redis = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 
@@ -33,7 +33,7 @@ const worker = new Worker('video-processing', async (job) => {
   try {
     // STEP 1: Download
     await updateProjectStatus(projectId, 'downloading');
-    job.updateProgress(10);
+    await job.updateProgress(10);                          // FIX: awaited
     videoMeta = await downloadVideo(videoUrl);
     await supabase.from('projects').update({
       video_id:       videoMeta.videoId,
@@ -43,7 +43,7 @@ const worker = new Worker('video-processing', async (job) => {
     }).eq('id', projectId);
     console.log(`📥 Downloaded: ${videoMeta.title} (${videoMeta.durationFormatted})`);
 
-    // ── DURATION CAP CHECK ────────────────────────────────────────────────
+    // ── DURATION CAP CHECK ────────────────────────────────────
     const { data: userProfile } = await supabase
       .from('profiles').select('plan').eq('id', userId).single();
     const plan    = userProfile?.plan || 'free';
@@ -59,37 +59,40 @@ const worker = new Worker('video-processing', async (job) => {
       return { success: false, reason: 'duration_cap', capMins, vidMins, plan };
     }
     console.log(`✅ Duration OK: ${Math.round((videoMeta.durationSeconds||0)/60)} min (cap: ${Math.round(capSecs/60)} min)`);
-    // ─────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
 
     // STEP 2: Transcribe
     await updateProjectStatus(projectId, 'transcribing');
-    job.updateProgress(25);
+    await job.updateProgress(25);                          // FIX: awaited
     const transcript = await transcribeVideo(videoMeta.videoPath, videoMeta.audioPath);
     await supabase.from('projects').update({ transcript: transcript.fullText }).eq('id', projectId);
     console.log(`🎤 Transcribed: ${transcript.segments.length} segments`);
 
     // STEP 3: AI Analysis
     await updateProjectStatus(projectId, 'analyzing');
-    job.updateProgress(45);
+    await job.updateProgress(45);                          // FIX: awaited
     const analysis = await analyzeTranscript(transcript, videoMeta);
     await supabase.from('projects').update({
-      total_clips_found: analysis.totalClipsFound || analysis.clips.length,
+      total_clips_found: analysis.totalClipsFound || analysis.clips?.length || analysis.length,
       avg_viral_score:   analysis.avgViralScore   || 0,
       creator_detected:  !!analysis.creator?.name,
       creator_name:      analysis.creator?.name   || videoMeta.uploader,
     }).eq('id', projectId);
-    console.log(`🧠 Analysis: ${analysis.clips.length} viral moments found`);
+
+    // analyzeTranscript returns array directly — normalize here
+    const clips = Array.isArray(analysis) ? analysis : (analysis.clips || []);
+    console.log(`🧠 Analysis: ${clips.length} viral moments found`);
 
     // STEP 4: Cut clips (parallel)
     await updateProjectStatus(projectId, 'cutting');
-    job.updateProgress(60);
-    const cutResults = await cutClips(videoMeta.videoPath, analysis.clips, projectId);
+    await job.updateProgress(60);                          // FIX: awaited
+    const cutResults = await cutClips(videoMeta.videoPath, clips, projectId);
     console.log(`✂️  Cut: ${cutResults.filter(r => r.success).length} clips`);
 
     // STEP 5: Build word lists per clip
     const successfulResults = cutResults.filter(r => r.success);
     for (const result of successfulResults) {
-      const clip      = analysis.clips.find(c => c.id === result.clipId);
+      const clip      = clips.find(c => c.id === result.clipId);
       result.clipMeta = clip;
       result.words    = [];
       if (!clip) continue;
@@ -107,9 +110,9 @@ const worker = new Worker('video-processing', async (job) => {
       }
     }
 
-    // STEP 5a: Batch captions (4 parallel, hardware accelerated)
+    // STEP 5a: Batch captions
     await updateProjectStatus(projectId, 'captioning');
-    job.updateProgress(72);
+    await job.updateProgress(72);                          // FIX: awaited
     const captionInputs = successfulResults
       .filter(r => r.words.length > 0)
       .map(r => ({
@@ -127,13 +130,14 @@ const worker = new Worker('video-processing', async (job) => {
     }
     console.log(`💬 Captions done: ${captionResults.length} clips`);
 
-    // STEP 5b: Audio enhancement (all parallel)
-    job.updateProgress(80);
+    // STEP 5b: Audio enhancement
+    await job.updateProgress(80);                          // FIX: awaited
     await Promise.all(
       successfulResults.map(async (result) => {
         try {
-          const input          = result.captionedPath || result.clipPath;
-          result.captionedPath = await enhanceAudio(input, result.clipId, projectId);
+          const input = result.captionedPath || result.clipPath;
+          const enhanced = await enhanceAudio(input, result.clipId, projectId);
+          if (enhanced) result.captionedPath = enhanced;  // FIX: only reassign if non-null
           console.log(`🔊 Enhanced: clip ${result.clipId}`);
         } catch (e) {
           console.warn(`⚠️  Audio enhance failed clip ${result.clipId}: ${e.message}`);
@@ -141,7 +145,7 @@ const worker = new Worker('video-processing', async (job) => {
       })
     );
 
-    // STEP 5c: Thumbnails (all parallel)
+    // STEP 5c: Thumbnails
     await Promise.all(
       successfulResults.map(async (result) => {
         try {
@@ -155,7 +159,7 @@ const worker = new Worker('video-processing', async (job) => {
       })
     );
 
-    // STEP 5d: Watermark free tier (batch)
+    // STEP 5d: Watermark free tier
     const isFreePlan = !userProfile || userProfile.plan === 'free';
     if (isFreePlan) {
       console.log('💧 Free tier — batch watermarking...');
@@ -165,46 +169,46 @@ const worker = new Worker('video-processing', async (job) => {
       const wmResults = await addWatermarkBatch(wmInputs);
       wmInputs.forEach((inp, i) => {
         const r = cutResults.find(r => r.clipId === inp.clipId);
-        if (r) { r.watermarkedPath = wmResults[i]; r.captionedPath = wmResults[i]; }
+        if (r && wmResults[i]) { r.watermarkedPath = wmResults[i]; r.captionedPath = wmResults[i]; }
       });
     }
 
     // STEP 6: Upload to R2
     await updateProjectStatus(projectId, 'uploading');
-    job.updateProgress(88);
+    await job.updateProgress(88);                          // FIX: awaited
     const uploadResults = await uploadClips(cutResults, projectId);
 
     // STEP 7: Save to DB
-    const clipRecords = analysis.clips.map((clip) => {
+    const clipRecords = clips.map((clip) => {
       const upload = uploadResults.find(u => u.clipId === clip.id);
       const cut    = cutResults.find(r => r.clipId === clip.id);
       return {
         project_id:         projectId,
         user_id:            userId,
         clip_number:        clip.id,
-        start_time:         clip.startTime,
-        end_time:           clip.endTime,
+        start_time:         clip.startTime       || clip.startSeconds,
+        end_time:           clip.endTime         || clip.endSeconds,
         duration:           clip.duration,
-        duration_seconds:   clip.durationSeconds,
-        viral_score:        clip.viralScore,
+        duration_seconds:   clip.durationSeconds || (clip.endSeconds - clip.startSeconds),
+        viral_score:        clip.viralScore      || clip.viral_score || 0,
         engagement_score:   clip.engagementScore   || 0,
         retention_score:    clip.retentionScore     || 0,
         shareability_score: clip.shareabilityScore  || 0,
-        ai_header:          clip.aiHeader,
-        hook_line:          clip.hookLine,
-        clip_title:         clip.clipTitle,
-        seo_title:          clip.seoTitle,
-        description:        clip.description,
+        ai_header:          clip.aiHeader  || clip.title,
+        hook_line:          clip.hookLine  || clip.hook,
+        clip_title:         clip.clipTitle || clip.title,
+        seo_title:          clip.seoTitle  || clip.title,
+        description:        clip.description || clip.reason,
         platform:           clip.platform,
         predicted_views:    clip.predictedViews,
         hashtags:           clip.hashtags,
         caption_style:      captionStyle || 'wordpop',
-        why_viral:          clip.whyViral,
+        why_viral:          clip.whyViral || clip.reason,
         emotion:            clip.emotion,
         category:           clip.category,
         transcript_segment: clip.transcriptSegment || '',
-        video_url:          upload?.videoUrl        || null,
-        thumbnail_url:      upload?.thumbnailUrl    || null,
+        video_url:          upload?.videoUrl     || null,
+        thumbnail_url:      upload?.thumbnailUrl || null,
         has_captions:       !!cut?.captionedPath,
         audio_enhanced:     true,
       };
@@ -213,8 +217,8 @@ const worker = new Worker('video-processing', async (job) => {
     await supabase.from('clips').insert(clipRecords);
 
     // DONE
-    await updateProjectStatus(projectId, 'complete');
-    job.updateProgress(100);
+    await updateProjectStatus(projectId, 'completed');     // FIX: 'complete' → 'completed'
+    await job.updateProgress(100);                         // FIX: awaited
     cleanupVideo(videoMeta.videoId);
 
     console.log(`\n✅ PROJECT COMPLETE: ${projectId}`);
