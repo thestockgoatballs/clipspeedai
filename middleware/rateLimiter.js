@@ -1,46 +1,70 @@
-const IORedis = require('ioredis');
+const { supabase } = require('../lib/supabase');
 
-const redis = new IORedis(process.env.REDIS_URL, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck:     false,
-});
-
-const LIMITS = {
-    free:    { max: 3,  window: 60 },
-    starter: { max: 10, window: 60 },
-    pro:     { max: 20, window: 60 },
-    agency:  { max: 40, window: 60 },
+const PLAN_LIMITS = {
+  free:     30,
+  starter:  200,
+  pro:      600,
+  pack3:    900,
+  pack4:    1200,
+  agency:   1500,
 };
 
-function rateLimiter(routeName) {
-    return async (req, res, next) => {
-        const userId = req.user?.id;
-        if (!userId) return next();
+async function checkAndIncrementClipUsage(userId) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('plan, clips_used_this_month, clips_limit')
+    .eq('id', userId)
+    .single();
 
-        const plan  = req.user?.plan || 'free';
-        const rule  = LIMITS[plan]   || LIMITS.free;
-        const key   = `rl:${routeName}:${userId}`;
+  if (error || !profile) {
+    return { allowed: false, error: 'Profile not found', upgrade: true };
+  }
 
-        try {
-            const count = await redis.incr(key);
-            if (count === 1) await redis.expire(key, rule.window);
+  const limit = profile.clips_limit || PLAN_LIMITS[profile.plan] || 10;
+  const used  = profile.clips_used_this_month || 0;
 
-            if (count > rule.max) {
-                const ttl = await redis.ttl(key);
-                return res.status(429).json({
-                    error:   'Rate limit exceeded',
-                    retryIn: ttl,
-                    limit:   rule.max,
-                    window:  rule.window,
-                    upgrade: plan === 'free',
-                });
-            }
-        } catch (_) {
-            // Redis error — fail open so users are never blocked by infra issues
-        }
-
-        next();
+  if (used >= limit) {
+    return {
+      allowed: false,
+      error:   `Clip limit reached (${used}/${limit}). Upgrade your plan for more clips.`,
+      plan: profile.plan, used, limit, upgrade: true,
     };
+  }
+
+  await supabase
+    .from('profiles')
+    .update({ clips_used_this_month: used + 1 })
+    .eq('id', userId);
+
+  return { allowed: true, plan: profile.plan, used: used + 1, limit, remaining: limit - used - 1 };
 }
 
-module.exports = { rateLimiter };
+async function resetMonthlyUsage() {
+  await supabase.from('profiles').update({ clips_used_this_month: 0 }).neq('plan', '');
+  console.log('🔄 Monthly clip usage reset for all users');
+}
+
+function rateLimiter(type) {
+  return async (req, res, next) => {
+    try {
+      if (type === 'analyze') {
+        const result = await checkAndIncrementClipUsage(req.user.id);
+        if (!result.allowed) {
+          return res.status(403).json({
+            error:   result.error,
+            upgrade: true,
+            plan:    result.plan,
+            used:    result.used,
+            limit:   result.limit,
+          });
+        }
+      }
+      next();
+    } catch (err) {
+      console.error('Rate limiter error:', err.message);
+      next();
+    }
+  };
+}
+
+module.exports = { rateLimiter, checkAndIncrementClipUsage, resetMonthlyUsage, PLAN_LIMITS };
