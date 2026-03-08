@@ -1,4 +1,4 @@
-# force rebuild v55
+# force rebuild v56
 FROM node:20-slim
 RUN apt-get update && apt-get install -y ffmpeg python3 python3-pip python3-venv curl && rm -rf /var/lib/apt/lists/*
 RUN python3 -m pip install --break-system-packages --no-cache-dir yt-dlp
