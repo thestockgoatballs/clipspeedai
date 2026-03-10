@@ -1,97 +1,49 @@
+// ClipSpeedAI API v3 — March 9 2026
 require('dotenv').config();
-
-const express    = require('express');
-const cors       = require('cors');
-const helmet     = require('helmet');
-const IORedis    = require('ioredis');
-const { Queue }  = require('bullmq');
-
-const { rateLimiter }            = require('./middleware/rateLimiter');
+const express = require('express');
+const cors    = require('cors');
+const helmet  = require('helmet');
+const IORedis = require('ioredis');
+const { Queue } = require('bullmq');
+const { rateLimiter } = require('./middleware/rateLimiter');
 const { verifyAuth, getProfile } = require('./lib/supabase');
 
-// ── Auth middleware ───────────────────────────────────────────
-async function authMiddleware(req, res, next) {
-  try {
-    const header = req.headers.authorization || '';
-    const token  = header.replace('Bearer ', '').trim();
-    if (!token) return res.status(401).json({ error: 'No token provided' });
+const app = express();
+app.use(cors({ origin: '*' }));
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: '5mb' }));
 
-    const user = await verifyAuth(token);
-    if (!user)  return res.status(401).json({ error: 'Invalid or expired token' });
-
-    const profile  = await getProfile(user.id);
-    req.user       = { ...user, plan: profile?.plan || 'free' };
-    next();
-  } catch (err) {
-    console.error('Auth error:', err.message);
-    res.status(401).json({ error: 'Authentication failed' });
-  }
-}
-
-const app  = express();
-const PORT = process.env.PORT || 3000;
-
-// ── Redis + BullMQ queue ──────────────────────────────────────
-const redis = new IORedis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null,
-  enableReadyCheck:     false,
-});
-
+const redis = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 const videoQueue = new Queue('video-processing', { connection: redis });
 app.set('videoQueue', videoQueue);
 
-// ── IMPORTANT: Raw body for Stripe webhook BEFORE express.json ──
-app.use('/webhook', express.raw({ type: 'application/json' }));
+// Auth middleware
+async function authMiddleware(req, res, next) {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No token' });
+    const user = await verifyAuth(token);
+    if (!user) return res.status(401).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  } catch (e) { res.status(401).json({ error: 'Auth failed' }); }
+}
 
-// ── Core middleware ───────────────────────────────────────────
-app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({
-  origin:      process.env.ALLOWED_ORIGINS?.split(',') || '*',
-  credentials: true,
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Health
+app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v3-mar9' }));
+app.get('/', (req, res) => res.json({ app: 'ClipSpeedAI', version: 'v3-mar9' }));
 
-// ── Health check (no auth) ────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// Routes — NO rateLimiter on /analyze (it's inside the route file on POST only)
+try { app.use('/analyze', authMiddleware, require('./routes/analyze')); } catch(e) { console.error('Route error /analyze:', e.message); }
+try { app.use('/clips', authMiddleware, require('./routes/clips')); } catch(e) { console.error('Route error /clips:', e.message); }
+try { app.use('/export', authMiddleware, rateLimiter('export'), require('./routes/export')); } catch(e) {}
+try { app.use('/billing', require('./routes/billing')); } catch(e) {}
+try { app.use('/webhook', require('./routes/webhook')); } catch(e) {}
+try { app.use('/referral', authMiddleware, require('./routes/referral')); } catch(e) {}
+try { app.use('/claude', authMiddleware, rateLimiter('claude'), require('./routes/claude')); } catch(e) {}
 
-app.get('/', (req, res) => {
-  res.json({ name: 'ClipSpeedAI API', status: 'running' });
-});
-
-// ── Public routes (no auth) ───────────────────────────────────
-try { app.use('/auth',    require('./routes/auth'));    } catch (e) { console.warn('⚠️  auth route failed:',    e.message); }
-try { app.use('/webhook', require('./routes/webhook')); } catch (e) { console.warn('⚠️  webhook route failed:', e.message); }
-
-// ── Protected routes (auth + rate limiter) ────────────────────
-try { app.use('/analyze',  authMiddleware, rateLimiter('analyze'),  require('./routes/analyze'));   } catch (e) { console.warn('⚠️  analyze route failed:',   e.message); }
-try { app.use('/clips',    authMiddleware,                          require('./routes/clips'));     } catch (e) { console.warn('⚠️  clips route failed:',     e.message); }
-try { app.use('/export',   authMiddleware, rateLimiter('export'),   require('./routes/export'));    } catch (e) { console.warn('⚠️  export route failed:',    e.message); }
-try { app.use('/claude',   authMiddleware, rateLimiter('claude'),   require('./routes/claude'));    } catch (e) { console.warn('⚠️  claude route failed:',    e.message); }
-try { app.use('/billing',  authMiddleware,                          require('./routes/billing'));   } catch (e) { console.warn('⚠️  billing route failed:',   e.message); }
-try { app.use('/analytics',authMiddleware,                          require('./routes/analytics')); } catch (e) { console.warn('⚠️  analytics route failed:', e.message); }
-try { app.use('/templates',authMiddleware,                          require('./routes/templates')); } catch (e) { console.warn('⚠️  templates route failed:', e.message); }
-try { app.use('/broll',    authMiddleware,                          require('./routes/broll'));     } catch (e) { console.warn('⚠️  broll route failed:',     e.message); }
-try { app.use('/referral', authMiddleware,                          require('./routes/referral')); } catch (e) { console.warn('⚠️  referral route failed:',  e.message); }
-
-// ── 404 handler ───────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
-});
-
-// ── Global error handler ──────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// ── Start server ──────────────────────────────────────────────
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`\n🚀 ClipSpeedAI API running on port ${PORT}`);
-  console.log(`📋 Queue: video-processing connected`);
-  console.log(`🛡️  Rate limiter: active on /analyze, /export, /claude\n`);
+  console.log('✅ Analyze status polling: NO rate limiter');
+  console.log(`🚀 ClipSpeedAI API v3 running on port ${PORT}`);
 });
-
-module.exports = app;
