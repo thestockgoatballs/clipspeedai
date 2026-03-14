@@ -103,7 +103,7 @@ function resolveStyle(name) {
  * Logos auto-downloaded from R2 on first use.
  * Applied to EVERY clip. ALL plans. No exceptions.
  */
-const BRAND_LOGO_URL = 'https://pub-6640e445140f466bb23f48844b80c17d.r2.dev/ClipSpeed%20(1).png';
+const BRAND_LOGO_URL = 'https://pub-6640e445140f466bb23f48844b80c17d.r2.dev/Untitled%20design%20(2)-Picsart-BackgroundRemover.png';
 const KICK_LOGO_URL = 'https://pub-6640e445140f466bb23f48844b80c17d.r2.dev/Screenshot_2026-03-11_at_7.15.50_PM-removebg-preview.png';
 const LOGO_DIR = '/tmp/clipspeed/watermarks';
 let logosDownloaded = false;
@@ -112,25 +112,9 @@ function downloadLogos() {
   try {
     fs.mkdirSync(LOGO_DIR, { recursive: true });
     const brandPath = path.join(LOGO_DIR, 'clipspeed-logo.png');
-    const brandRaw = path.join(LOGO_DIR, 'clipspeed-logo-raw.png');
     const kickPath = path.join(LOGO_DIR, 'kick-logo.png');
-    // Always re-download brand logo to pick up updates
-    try {
-      execSync(`curl -s -o "${brandRaw}" "${BRAND_LOGO_URL}"`, { timeout: 15000 });
-      // Strip white/light background — make it transparent using ffmpeg colorkey
-      try {
-        execSync(`ffmpeg -y -i "${brandRaw}" -vf "colorkey=0xFFFFFF:0.2:0.1" "${brandPath}" 2>/dev/null`, { timeout: 10000, stdio: 'pipe' });
-      } catch(e2) {
-        // If colorkey fails, try with different similarity
-        try {
-          execSync(`ffmpeg -y -i "${brandRaw}" -vf "colorkey=0xE5E5E5:0.25:0.15" "${brandPath}" 2>/dev/null`, { timeout: 10000, stdio: 'pipe' });
-        } catch(e3) {
-          // Fall back to raw file
-          if (fs.existsSync(brandRaw)) fs.copyFileSync(brandRaw, brandPath);
-        }
-      }
-      if(!logosDownloaded) console.log('  ✅ ClipSpeedAI logo downloaded + bg removed');
-    } catch(e) {}
+    // Download brand logo as-is — no background removal (colorkey destroys the logo)
+    try { execSync(`curl -s -o "${brandPath}" "${BRAND_LOGO_URL}"`, { timeout: 15000 }); if(!logosDownloaded) console.log('  ✅ ClipSpeedAI logo downloaded'); } catch(e) {}
     if (!fs.existsSync(kickPath) || fs.statSync(kickPath).size < 1000) {
       try { execSync(`curl -s -o "${kickPath}" "${KICK_LOGO_URL}"`, { timeout: 15000 }); if(!logosDownloaded) console.log('  ✅ Kick logo downloaded'); } catch(e) {}
     }
@@ -149,6 +133,25 @@ async function addWatermark(inputPath, outputPath, streamerName) {
   const font = fs.existsSync(fontPath) ? fontPath : fontFallback;
   const creator = (streamerName || 'Unknown').replace(/'/g, '').toUpperCase();
 
+  // ═══ AUTO-DETECT VIDEO DIMENSIONS ═══
+  let vw = 1080, vh = 1920;
+  try {
+    const dimOut = execSync(`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${inputPath}"`, { timeout: 8000, stdio: 'pipe', shell: true }).toString().trim().split(',');
+    vw = parseInt(dimOut[0]) || 1080;
+    vh = parseInt(dimOut[1]) || 1920;
+  } catch (_) {}
+  
+  // Scale everything proportionally based on video width
+  const scale = vw / 1080; // 1.0 for 1080w, 0.75 for 810w, etc
+  const brandW = Math.round(Math.min(550, vw * 0.3)); // Brand logo max 30% of width, cap at 550
+  const kickW = Math.round(Math.min(240, vw * 0.15)); // Kick logo max 15% of width, cap at 240
+  const barH = Math.round(Math.max(50, Math.min(80, vh * 0.06))); // Bottom bar 6% of height, 50-80px
+  const fontSize = Math.round(Math.max(22, Math.min(36, vh * 0.033))); // Username font
+  const brandFontSize = Math.round(Math.max(16, Math.min(28, vh * 0.025))); // ClipSpeedAI text
+  const brandPad = Math.round(Math.max(20, Math.min(30, vw * 0.015))); // Padding from edges
+  
+  console.log(`  📐 Watermark auto-scale: ${vw}x${vh} | scale=${scale.toFixed(2)} | bar=${barH}px | font=${fontSize}pt`);
+
   const brandLogo = path.join(LOGO_DIR, 'clipspeed-logo.png');
   const kickLogo = path.join(LOGO_DIR, 'kick-logo.png');
   const hasBrandLogo = fs.existsSync(brandLogo) && fs.statSync(brandLogo).size > 1000;
@@ -157,36 +160,27 @@ async function addWatermark(inputPath, outputPath, streamerName) {
   let cmd;
 
   if (hasBrandLogo && hasKickLogo) {
-    // BOTH LOGOS — FINAL LAYOUT: Brand 540px top-right, Kick breaking bar, username 72pt centered
     cmd = `ffmpeg -y -i "${inputPath}" -i "${brandLogo}" -i "${kickLogo}" -filter_complex "` +
-      // ClipSpeedAI logo — 540px wide (TRIPLED), top-right
-      `[1:v]scale=540:-1[brand];` +
-      // Kick logo — 480px wide, breaks above bar
-      `[2:v]scale=480:-1[kick];` +
-      // THICK dark bar — 192px (DOUBLED)
-      `[0:v]drawbox=x=0:y=ih-192:w=iw:h=192:color=black@0.92:t=fill[base];` +
-      // ClipSpeedAI logo top-right
-      `[base][brand]overlay=main_w-overlay_w-10:4[wb];` +
-      // Kick logo — pushed left, partially off-screen, breaks above bar
-      `[wb][kick]overlay=-60:main_h-300[wk];` +
-      // KICK.COM/USERNAME — right of kick logo, not centered
-      `[wk]drawtext=fontfile='${font}':text='KICK.COM/${creator}':fontsize=48:fontcolor=white@0.98:x=320:y=h-130:shadowcolor=black@0.6:shadowx=3:shadowy=3` +
+      `[1:v]scale=${brandW}:-1[brand];` +
+      `[2:v]scale=${kickW}:-1[kick];` +
+      `[0:v]drawbox=x=0:y=ih-${barH}:w=iw:h=${barH}:color=black@0.92:t=fill[base];` +
+      `[base][brand]overlay=main_w-overlay_w-${brandPad}:${brandPad}[wb];` +
+      `[wb][kick]overlay=${brandPad}:main_h-${barH + Math.round(50 * scale)}[wk];` +
+      `[wk]drawtext=fontfile='${font}':text='KICK.COM/${creator}':fontsize=${fontSize}:fontcolor=white@0.98:x=(w-tw)/2:y=h-${Math.round(barH * 0.7)}:shadowcolor=black@0.6:shadowx=2:shadowy=2` +
       `" -c:v libx264 -preset fast -crf 22 -c:a copy -movflags +faststart "${outputPath}"`;
   } else if (hasKickLogo) {
-    // Kick logo + text ClipSpeedAI — same sizes
     cmd = `ffmpeg -y -i "${inputPath}" -i "${kickLogo}" -filter_complex "` +
-      `[1:v]scale=480:-1[kick];` +
-      `[0:v]drawbox=x=0:y=ih-192:w=iw:h=192:color=black@0.92:t=fill[base];` +
-      `[base][kick]overlay=-60:main_h-300[wk];` +
-      `[wk]drawtext=fontfile='${font}':text='KICK.COM/${creator}':fontsize=48:fontcolor=white@0.98:x=320:y=h-130:shadowcolor=black@0.6:shadowx=3:shadowy=3,` +
-      `drawtext=fontfile='${font}':text='ClipSpeedAI':fontsize=44:fontcolor=white@0.9:x=w-tw-14:y=14:shadowcolor=black@0.8:shadowx=2:shadowy=2` +
+      `[1:v]scale=${kickW}:-1[kick];` +
+      `[0:v]drawbox=x=0:y=ih-${barH}:w=iw:h=${barH}:color=black@0.92:t=fill[base];` +
+      `[base][kick]overlay=${brandPad}:main_h-${barH + Math.round(50 * scale)}[wk];` +
+      `[wk]drawtext=fontfile='${font}':text='KICK.COM/${creator}':fontsize=${fontSize}:fontcolor=white@0.98:x=(w-tw)/2:y=h-${Math.round(barH * 0.7)}:shadowcolor=black@0.6:shadowx=2:shadowy=2,` +
+      `drawtext=fontfile='${font}':text='ClipSpeedAI':fontsize=${brandFontSize}:fontcolor=white@0.9:x=w-tw-${brandPad}:y=${brandPad}:shadowcolor=black@0.8:shadowx=2:shadowy=2` +
       `" -c:v libx264 -preset fast -crf 22 -c:a copy -movflags +faststart "${outputPath}"`;
   } else {
-    // TEXT-ONLY fallback — same sizes
     const vf = [
-      `drawbox=x=0:y=ih-192:w=iw:h=192:color=black@0.92:t=fill`,
-      `drawtext=fontfile='${font}':text='KICK.COM/${creator}':fontsize=72:fontcolor=0x53FC18@1.0:x=(w-tw)/2:y=h-130:shadowcolor=black@0.6:shadowx=3:shadowy=3`,
-      `drawtext=fontfile='${font}':text='ClipSpeedAI':fontsize=44:fontcolor=white@0.9:x=w-tw-14:y=14:shadowcolor=black@0.8:shadowx=2:shadowy=2`,
+      `drawbox=x=0:y=ih-${barH}:w=iw:h=${barH}:color=black@0.92:t=fill`,
+      `drawtext=fontfile='${font}':text='KICK.COM/${creator}':fontsize=${fontSize}:fontcolor=0x53FC18@1.0:x=(w-tw)/2:y=h-${Math.round(barH * 0.7)}:shadowcolor=black@0.6:shadowx=2:shadowy=2`,
+      `drawtext=fontfile='${font}':text='ClipSpeedAI':fontsize=${brandFontSize}:fontcolor=white@0.9:x=w-tw-${brandPad}:y=${brandPad}:shadowcolor=black@0.8:shadowx=2:shadowy=2`,
     ].join(',');
     cmd = `ffmpeg -y -i "${inputPath}" -vf "${vf}" -c:v libx264 -preset fast -crf 22 -c:a copy -movflags +faststart "${outputPath}"`;
   }
@@ -210,7 +204,7 @@ async function addCaptions(arg1, arg2, arg3, arg4) {
     if (!clipResult.success || !clipResult.clipPath) return clipResult;
     clipPath = clipResult.clipPath; clipId = clipResult.clipId || (clip && clip.id) || 0;
     styleName = opts.captionStyle || (clip && clip.captionStyle) || 'bold'; clipWords = [];
-    if (transcript && transcript.words && clip) { for (const w of transcript.words) { if (w.start >= clip.startSeconds && w.end <= clip.endSeconds) { var clean = (w.word || '').replace(/^[,\.;:!?\-\—\–\"\']+/, '').replace(/[,\.;:!?\-\—\–\"\']+$/, '').replace(/[,\.;:!?\—\–\"\']/g, '').trim(); if (clean.length > 0) clipWords.push({ word: clean, start: w.start - clip.startSeconds, end: w.end - clip.startSeconds }); } } }
+    if (transcript && transcript.words && clip) { for (const w of transcript.words) { if (w.start >= clip.startSeconds && w.end <= clip.endSeconds) { var raw = String(w.word || ''); var clean = ''; for (var ci = 0; ci < raw.length; ci++) { var ch = raw[ci]; if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch === "'" || ch === '-' || ch === ' ') clean += ch; } clean = clean.trim(); if (clean.length > 0) clipWords.push({ word: clean, start: w.start - clip.startSeconds, end: w.end - clip.startSeconds }); } } }
   } else { return arg1; }
 
   const style = resolveStyle(styleName);
@@ -288,10 +282,10 @@ function buildASS(words, style, vw, vh) {
 function groupIntoLines(words, n) { const lines = []; for (let i = 0; i < words.length; i += n) { const chunk = words.slice(i, i + n); lines.push({ words: chunk, start: chunk[0].start, end: chunk[chunk.length - 1].end }); } return lines; }
 function fmt(word, style) { return style.uppercase ? word.toUpperCase() : word; }
 function tag(color, border) { return `{\\c${color}\\3c${border}}`; }
-function dlg(layer, start, end, styleName, text) { return `Dialogue: ${layer},${fmtT(start)},${fmtT(end)},${styleName},,0,0,0,,${text}\n`; }
+function dlg(layer, start, end, styleName, text) { return `Dialogue: ${layer},${fmtT(start)},${fmtT(end)},${styleName},,0,0,,${text}\n`; }
 function fmtT(s) { s = Math.max(0, s); const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); const sc = Math.floor(s % 60); const cs = Math.floor((s % 1) * 100); return `${h}:${p(m)}:${p(sc)}.${p(cs)}`; }
 function p(n) { return String(n).padStart(2, '0'); }
 function esc(t) { return String(t).replace(/\\/g, '\\\\').replace(/\{/g, '\\{').replace(/\}/g, '\\}').replace(/\n/g, '\\N'); }
 function safeDelete(f) { try { if (f && fs.existsSync(f)) fs.unlinkSync(f); } catch (_) {} }
 
-module.exports = { addCaptions, addWatermark, STYLES, STYLE_ALIASES };
+module.exports = { addCaptions, addWatermark, buildASS, resolveStyle, STYLES, STYLE_ALIASES };
